@@ -20,12 +20,11 @@ name(DomId, CatId) ->
     list_to_atom(?MODULE_STRING ++ "[" ++ DomId ++ "][" ++ CatId ++ "]").
 
 start_link(DomId, CatId) ->
-    gen_server:start_link({local, name(DomId, CatId)}, ?MODULE,
-                          [DomId, CatId], []).
+    gen_server:start_link({local, name(DomId, CatId)}, ?MODULE, [], []).
 
 %%% gen_server callbacks
 
-init([_DomId, _CatId]) ->
+init([]) ->
     {ok, #state{}}.
 
 handle_call(_Request, _From, State) ->
