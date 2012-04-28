@@ -1,4 +1,5 @@
 -module(dk_ifi).
+
 -export([add_dom/1, del_dom/1, add_cat/2, del_cat/2]).
 -export([add_pointer/4, del_pointer/4, get_inv_list/3]).
 

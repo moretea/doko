@@ -1,8 +1,10 @@
 -module(dk_ifi_app).
+
 -behaviour(application).
+
 -export([start/2, stop/1]).
 
-%%% Application callbacks
+%%% application callbacks
 
 start(_StartType, _StartArgs) ->
     dk_ifi_sup:start_link().
