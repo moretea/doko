@@ -17,14 +17,14 @@ add_cat(DomId, CatId) ->
 del_cat(DomId, CatId) ->
     dk_ifi_dom_sup:del_cat(DomId, CatId).
 
-add_pointer(_DomId, _CatId, _DocId, _Term) ->
-    ok.
+add_pointer(DomId, CatId, DocId, Term) ->
+    dk_ifi_cat:add_pointer(DomId, CatId, DocId, Term).
 
-del_pointer(_DomId, _CatId, _DocId, _Term) ->
-    ok.
+del_pointer(DomId, CatId, DocId, Term) ->
+    dk_ifi_cat:del_pointer(DomId, CatId, DocId, Term).
 
-get_inv_list(_DomId, _CatId, _Term) ->
-    [].
+get_inv_list(DomId, CatId, Term) ->
+    dk_ifi_cat:get_inv_list(DomId, CatId, Term).
 
 %%% Local variables:
 %%% mode: erlang
