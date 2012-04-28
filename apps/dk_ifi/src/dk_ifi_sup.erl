@@ -28,6 +28,4 @@ start_link() ->
 %%% Supervisor callbacks
 
 init([]) ->
-    {ok, {{one_for_one, 5, 10}, [{dk_ifi, {dk_ifi, start_link, []},
-                                  permanent, 5000, worker, [dk_ifi]}]}}.
-
+    {ok, {{one_for_one, 5, 10}, []}}.
