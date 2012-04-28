@@ -3,7 +3,7 @@
 -behaviour(supervisor).
 
 %% API
--export([add_dom/1]).
+-export([add_dom/1, del_dom/1]).
 -export([start_link/0]).
 
 %% Supervisor callbacks
@@ -19,6 +19,11 @@ add_dom(DomId) ->
       ?MODULE, {dk_ifi_dom_sup:name(DomId),
                 {dk_ifi_dom_sup, start_link, [DomId]},
                 transient, 5000, supervisor, [dk_ifi_dom_sup]}).
+
+del_dom(DomId) ->
+    Name = dk_ifi_dom_sup:name(DomId),
+    supervisor:terminate_child(?MODULE, Name),
+    supervisor:delete_child(?MODULE, Name).
 
 start_link() ->
     supervisor:start_link({local, ?MODULE}, ?MODULE, []).

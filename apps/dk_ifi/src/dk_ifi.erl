@@ -20,8 +20,8 @@
 add_dom(DomId) ->
     dk_ifi_sup:add_dom(DomId).
 
-del_dom(_DomId) ->
-    ok.
+del_dom(DomId) ->
+    dk_ifi_sup:del_dom(DomId).
 
 add_cat(_DomId, _CatId) ->
     ok.
