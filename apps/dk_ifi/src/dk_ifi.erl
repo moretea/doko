@@ -14,8 +14,8 @@ del_dom(DomId) ->
 add_cat(DomId, CatId) ->
     dk_ifi_dom_sup:add_cat(DomId, CatId).
 
-del_cat(_DomId, _CatId) ->
-    ok.
+del_cat(DomId, CatId) ->
+    dk_ifi_dom_sup:del_cat(DomId, CatId).
 
 add_pointer(_DomId, _CatId, _DocId, _Term) ->
     ok.
