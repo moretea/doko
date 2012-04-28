@@ -17,8 +17,8 @@
 
 %%% API
 
-add_dom(_DomId) ->
-    ok.
+add_dom(DomId) ->
+    dk_ifi_sup:add_dom(DomId).
 
 del_dom(_DomId) ->
     ok.

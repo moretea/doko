@@ -3,14 +3,22 @@
 -behaviour(supervisor).
 
 %% API
+-export([add_dom/1]).
 -export([start_link/0]).
+
 %% Supervisor callbacks
 -export([init/1]).
 
 %% Helper macro for declaring children of supervisor
 -define(CHILD(I, Type), {I, {I, start_link, []}, permanent, 5000, Type, [I]}).
 
-%%% API 
+%%% API
+
+add_dom(DomId) ->
+    supervisor:start_child(
+      ?MODULE, {dk_ifi_dom_sup:name(DomId),
+                {dk_ifi_dom_sup, start_link, [DomId]},
+                transient, 5000, supervisor, [dk_ifi_dom_sup]}).
 
 start_link() ->
     supervisor:start_link({local, ?MODULE}, ?MODULE, []).
