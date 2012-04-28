@@ -9,9 +9,6 @@
 %% Supervisor callbacks
 -export([init/1]).
 
-%% Helper macro for declaring children of supervisor
--define(CHILD(I, Type), {I, {I, start_link, []}, permanent, 5000, Type, [I]}).
-
 %%% API
 
 add_dom(DomId) ->
@@ -31,5 +28,6 @@ start_link() ->
 %%% Supervisor callbacks
 
 init([]) ->
-    {ok, {{one_for_one, 5, 10}, [?CHILD(dk_ifi, worker)]}}.
+    {ok, {{one_for_one, 5, 10}, [{dk_ifi, {dk_ifi, start_link, []},
+                                  permanent, 5000, worker, [dk_ifi]}]}}/
 
