@@ -1,11 +1,10 @@
--module(dk_ifi).
+-module(dk_ifi_cat).
 
 -behavior(gen_server).
 
 %% API
--export([add_dom/1, del_dom/1, add_cat/2, del_cat/2]).
--export([add_pointer/4, del_pointer/4, get_inv_list/3]).
--export([start_link/0]).
+-export([name/2]).
+-export([start_link/2]).
 
 %% gen_server callbacks
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2,
@@ -17,33 +16,15 @@
 
 %%% API
 
-add_dom(DomId) ->
-    dk_ifi_sup:add_dom(DomId).
+name(DomId, CatId) ->
+    list_to_atom(?MODULE_STRING ++ "[" ++ DomId ++ "][" ++ CatId ++ "]").
 
-del_dom(DomId) ->
-    dk_ifi_sup:del_dom(DomId).
-
-add_cat(DomId, CatId) ->
-    dk_ifi_dom_sup:add_cat(DomId, CatId).
-
-del_cat(_DomId, _CatId) ->
-    ok.
-
-add_pointer(_DomId, _CatId, _DocId, _Term) ->
-    ok.
-
-del_pointer(_DomId, _CatId, _DocId, _Term) ->
-    ok.
-
-get_inv_list(_DomId, _CatId, _Term) ->
-    [].
-
-start_link() ->
-    gen_server:start_link({local, ?SERVER}, ?MODULE, [], []).
+start_link(DomId, CatId) ->
+    gen_server:start_link({local, ?SERVER}, ?MODULE, [DomId, CatId], []).
 
 %%% gen_server callbacks
 
-init([]) ->
+init([_DomId, _CatId]) ->
     {ok, #state{}}.
 
 handle_call(_Request, _From, State) ->
