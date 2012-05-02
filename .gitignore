@@ -1,5 +1,6 @@
 .#*
-/apps/*/doc/
+/apps/*/doc/*
+!/apps/*/doc/overview.edoc
 /nonpublic/
 ebin/
 erl_crash.dump
