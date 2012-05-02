@@ -1,4 +1,5 @@
 .#*
+/apps/*/doc/
+/nonpublic/
 ebin/
 erl_crash.dump
-nonpublic/
