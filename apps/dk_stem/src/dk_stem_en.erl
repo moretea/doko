@@ -328,7 +328,6 @@ postprocess(Word) ->
     Options = [unicode, global, {return, binary}],
     re:replace(Word, Regex, "y", Options).
 
--spec r1_r2(utf8_string()) -> {utf8_string(), utf8_string()}.
 r1_r2(Word) ->
     Regex = [<<".*?[">>, ?VOWELS, <<"][^">>, ?VOWELS, <<"](.*)$">>],
     Options = [unicode, global, {capture, all_but_first, binary}],
