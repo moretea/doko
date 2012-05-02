@@ -1,6 +1,12 @@
+*.beam
+*.css
+*.html
 .#*
 /apps/*/doc/*
 !/apps/*/doc/overview.edoc
 /nonpublic/
+/tests/*/*.logs/*
+/tests/ct_run.*
+/tests/variables-*
 ebin/
 erl_crash.dump
