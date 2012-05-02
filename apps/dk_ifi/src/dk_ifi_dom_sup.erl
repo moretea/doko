@@ -1,3 +1,4 @@
+%% @private
 -module(dk_ifi_dom_sup).
 
 -behaviour(supervisor).

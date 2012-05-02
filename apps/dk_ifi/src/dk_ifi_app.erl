@@ -1,3 +1,4 @@
+%% @private
 -module(dk_ifi_app).
 
 -behaviour(application).

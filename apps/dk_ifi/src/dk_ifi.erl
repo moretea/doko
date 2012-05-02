@@ -5,24 +5,31 @@
 
 %%% API
 
+%% @doc Adds a domain.
 add_dom(DomId) ->
     dk_ifi_sup:add_dom(DomId).
 
+%% @doc Deletes a domain.
 del_dom(DomId) ->
     dk_ifi_sup:del_dom(DomId).
 
+%% @doc Adds a category.
 add_cat(DomId, CatId) ->
     dk_ifi_dom_sup:add_cat(DomId, CatId).
 
+%% @doc Deletes a category.
 del_cat(DomId, CatId) ->
     dk_ifi_dom_sup:del_cat(DomId, CatId).
 
+%% @doc Adds a posting.
 add_post(DomId, CatId, DocId, Term) ->
     dk_ifi_cat:add_post(DomId, CatId, DocId, Term).
 
+%% @doc Deletes a posting.
 del_post(DomId, CatId, DocId, Term) ->
     dk_ifi_cat:del_post(DomId, CatId, DocId, Term).
 
+%% @doc Returns the inversed list for a term.
 get_posts_list(DomId, CatId, Term) ->
     dk_ifi_cat:get_posts_list(DomId, CatId, Term).
 
