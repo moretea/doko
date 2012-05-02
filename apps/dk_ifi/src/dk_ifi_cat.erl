@@ -77,6 +77,7 @@ code_change(_OldVsn, State, _Extra) ->
     {ok, State}.
 
 %%% Internal functions
+
 tid(DomId, CatId) ->
     list_to_atom("dk_ifi[" ++ DomId ++ "][" ++ CatId ++ "]").
 
