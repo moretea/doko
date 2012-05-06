@@ -3,7 +3,9 @@
 %% API
 -export([run_suites/1]).
 
-%%% API functions
+%%----------------------------------------------------------------------------
+%% API
+%%----------------------------------------------------------------------------
 
 run_suites(Suites) ->
     lists:foreach(
@@ -15,8 +17,8 @@ run_suites(Suites) ->
       lists:map(fun (Suite) -> atom_to_list(Suite) ++ "_SUITE" end,
                 Suites)).
 
-%%% Local variables:
-%%% mode: erlang
-%%% fill-column: 78
-%%% coding: latin-1
-%%% End:
+%% Local variables:
+%% mode: erlang
+%% fill-column: 78
+%% coding: latin-1
+%% End:

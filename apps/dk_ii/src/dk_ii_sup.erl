@@ -7,10 +7,12 @@
 -export([add_dom/1, del_dom/1]).
 -export([start_link/0]).
 
-%% Supervisor callbacks
+%% supervisor callbacks
 -export([init/1]).
 
-%%% API
+%%----------------------------------------------------------------------------
+%% API
+%%----------------------------------------------------------------------------
 
 add_dom(DomId) ->
     supervisor:start_child(
@@ -26,7 +28,15 @@ del_dom(DomId) ->
 start_link() ->
     supervisor:start_link({local, ?MODULE}, ?MODULE, []).
 
-%%% Supervisor callbacks
+%%----------------------------------------------------------------------------
+%% supervisor callbacks
+%%----------------------------------------------------------------------------
 
 init([]) ->
     {ok, {{one_for_one, 5, 10}, []}}.
+
+%% Local variables:
+%% mode: erlang
+%% fill-column: 78
+%% coding: latin-1
+%% End:

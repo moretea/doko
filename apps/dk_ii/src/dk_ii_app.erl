@@ -3,9 +3,12 @@
 
 -behaviour(application).
 
+%% application callbacks
 -export([start/2, stop/1]).
 
-%%% application callbacks
+%%----------------------------------------------------------------------------
+%% application callbacks
+%%----------------------------------------------------------------------------
 
 start(_StartType, _StartArgs) ->
     dk_ii_sup:start_link().
@@ -13,8 +16,8 @@ start(_StartType, _StartArgs) ->
 stop(_State) ->
     ok.
 
-%%% Local variables:
-%%% mode: erlang
-%%% fill-column: 78
-%%% coding: latin-1
-%%% End:
+%% Local variables:
+%% mode: erlang
+%% fill-column: 78
+%% coding: latin-1
+%% End:

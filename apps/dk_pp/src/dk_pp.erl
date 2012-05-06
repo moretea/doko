@@ -1,9 +1,12 @@
 -module(dk_pp).
 -include("../../dk_utf8/include/dk_utf8.hrl").
 
+%% API
 -export([terms/2]).
 
-%%% API
+%%----------------------------------------------------------------------------
+%% API
+%%----------------------------------------------------------------------------
 
 %% @doc Returns a list of terms.
 -spec terms(utf8_string(), iso_639_1()) -> [utf8_string()].
@@ -12,7 +15,9 @@ terms(Str, Lang) ->
       fun (T) -> apply(list_to_atom("dk_stem_" ++ Lang), stem, [T]) end, 
       tokenize(dk_utf8:case_fold(Str), Lang)).
 
-%%% Internal functions
+%%----------------------------------------------------------------------------
+%% Internal functions
+%%----------------------------------------------------------------------------
 
 tokenize(Str, Lang) ->
     RE = case Lang of
@@ -24,8 +29,8 @@ tokenize(Str, Lang) ->
         {match, Tokens} -> lists:flatten(Tokens)
     end.
 
-%%% Local variables:
-%%% mode: erlang
-%%% fill-column: 78
-%%% coding: latin-1
-%%% End:
+%% Local variables:
+%% mode: erlang
+%% fill-column: 78
+%% coding: latin-1
+%% End:

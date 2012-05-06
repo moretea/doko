@@ -7,10 +7,12 @@
 -export([name/1, add_cat/2, del_cat/2]).
 -export([start_link/1]).
 
-%% Supervisor callbacks
+%% supervisor callbacks
 -export([init/1]).
 
-%%% API 
+%%----------------------------------------------------------------------------
+%% API 
+%%----------------------------------------------------------------------------
 
 name(DomId) ->
     list_to_atom(?MODULE_STRING ++ "[" ++ DomId ++ "]").
@@ -30,7 +32,15 @@ del_cat(DomId, CatId) ->
 start_link(DomId) ->
     supervisor:start_link({local, name(DomId)}, ?MODULE, []).
 
-%%% Supervisor callbacks
+%%----------------------------------------------------------------------------
+%% supervisor callbacks
+%%----------------------------------------------------------------------------
 
 init([]) ->
     {ok, {{one_for_one, 5, 10}, []}}.
+
+%% Local variables:
+%% mode: erlang
+%% fill-column: 78
+%% coding: latin-1
+%% End:

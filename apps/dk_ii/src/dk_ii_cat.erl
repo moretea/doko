@@ -16,7 +16,9 @@
 
 -record(state, {table}).
 
-%%% API
+%%----------------------------------------------------------------------------
+%% API
+%%----------------------------------------------------------------------------
 
 name(DomId, CatId) ->
     list_to_atom(?MODULE_STRING ++ "[" ++ DomId ++ "][" ++ CatId ++ "]").
@@ -37,7 +39,9 @@ start_link(DomId, CatId) ->
     gen_server:start_link(
       {local, name(DomId, CatId)}, ?MODULE, [DomId, CatId], []).
 
-%%% gen_server callbacks
+%%----------------------------------------------------------------------------
+%% gen_server callbacks
+%%----------------------------------------------------------------------------
 
 init([DomId, CatId]) ->
     Table =ets:new(tid(DomId, CatId), [set, public, named_table,
@@ -76,13 +80,15 @@ terminate(_Reason, _State) ->
 code_change(_OldVsn, State, _Extra) ->
     {ok, State}.
 
-%%% Internal functions
+%%----------------------------------------------------------------------------
+%% Internal Functions
+%%----------------------------------------------------------------------------
 
 tid(DomId, CatId) ->
     list_to_atom("dk_ii[" ++ DomId ++ "][" ++ CatId ++ "]").
 
-%%% Local variables:
-%%% mode: erlang
-%%% fill-column: 78
-%%% coding: latin-1
-%%% End:
+%% Local variables:
+%% mode: erlang
+%% fill-column: 78
+%% coding: latin-1
+%% End:

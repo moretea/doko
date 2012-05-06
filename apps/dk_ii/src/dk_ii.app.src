@@ -1,4 +1,4 @@
-%%% -*- mode: erlang; fill-column: 78; -*-
+%% -*- mode: erlang; fill-column: 78; -*-
 
 {application, dk_ii,
  [{description, "Inverted index"},

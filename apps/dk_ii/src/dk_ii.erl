@@ -1,9 +1,12 @@
 -module(dk_ii).
 
+%% API
 -export([add_dom/1, del_dom/1, add_cat/2, del_cat/2]).
 -export([add_post/4, del_post/4, get_posts_list/3]).
 
-%%% API
+%%----------------------------------------------------------------------------
+%% API
+%%----------------------------------------------------------------------------
 
 %% @doc Adds a domain.
 add_dom(DomId) ->
@@ -33,8 +36,8 @@ del_post(DomId, CatId, DocId, Term) ->
 get_posts_list(DomId, CatId, Term) ->
     dk_ii_cat:get_posts_list(DomId, CatId, Term).
 
-%%% Local variables:
-%%% mode: erlang
-%%% fill-column: 78
-%%% coding: latin-1
-%%% End:
+%% Local variables:
+%% mode: erlang
+%% fill-column: 78
+%% coding: latin-1
+%% End:

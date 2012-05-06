@@ -1,7 +1,10 @@
-%%% @doc English stemming library.
-%%% @reference See <a
-%%% href="http://snowball.tartarus.org/algorithms/english/stemmer.html"> this
-%%% page</a> for more information about the algorithm used.
+%%----------------------------------------------------------------------------
+%% @doc English stemming library.
+%% @reference See <a
+%% href="http://snowball.tartarus.org/algorithms/english/stemmer.html"> this
+%% page</a> for more information about the algorithm used.
+%% @end
+%%----------------------------------------------------------------------------
 
 -module(dk_stem_en).
 -include("../../dk_utf8/include/dk_utf8.hrl").
@@ -12,7 +15,9 @@
 %% Marco definitions
 -define(VOWELS, <<"aeiouy">>).
 
-%%% API functions
+%%----------------------------------------------------------------------------
+%% API
+%%----------------------------------------------------------------------------
 
 -spec stem(utf8_string()) -> utf8_string().
 stem(<<"andes">>) -> <<"andes">>;
@@ -53,7 +58,9 @@ stem(Word)  ->
             end
     end.
 
-%%% Internal functions
+%%----------------------------------------------------------------------------
+%% Internal functions
+%%----------------------------------------------------------------------------
 
 step0(Word) ->
     Apo_s_apo = dk_utf8:suffix(<<"'s'">>, Word),
@@ -350,8 +357,8 @@ r1_r2(Word) ->
          end,
     {R1, R2}.
 
-%%% Local variables:
-%%% mode: erlang
-%%% fill-column: 78
-%%% coding: latin-1
-%%% End:
+%% Local variables:
+%% mode: erlang
+%% fill-column: 78
+%% coding: latin-1
+%% End:
