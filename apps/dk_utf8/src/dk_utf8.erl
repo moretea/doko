@@ -13,19 +13,19 @@
 -spec length(utf8_string()) -> non_neg_integer().
 length(<<>>) ->
     0;
-length(_String = <<_Char/utf8, Rest/bytes>>) ->
+length(<<_Char/utf8, Rest/bytes>>) ->
     1 + length(Rest).
 
 %% @doc Returns true if a UTF-8 string contains a multibyte character.
 -spec has_mb_char(utf8_string()) -> boolean().
-has_mb_char(String) ->
-    lists:any(fun (C) -> C >= 128 end, binary:bin_to_list(String)).
+has_mb_char(Str) ->
+    lists:any(fun (C) -> C >= 128 end, binary:bin_to_list(Str)).
 
 %% @doc Returns true if a UTF-8 string ends with the given suffix.
 -spec suffix(utf8_string(), utf8_string()) -> boolean().
-suffix(Suffix, String) ->
+suffix(Suffix, Str) ->
     Xiffus = reverse(Suffix),
-    Gnirts = reverse(String),
+    Gnirts = reverse(Str),
     L = erlang:length(binary:bin_to_list(Suffix)),
     case Gnirts of
         <<Xiffus:L/bytes, _/bytes>> -> true;
@@ -34,8 +34,8 @@ suffix(Suffix, String) ->
 
 %% @doc Simple case folding. See [http://www.unicode.org/reports/tr44/].
 -spec case_fold(utf8_string()) -> utf8_string().
-case_fold(String) ->
-    << <<(char_fold(C))/utf8>> || <<C/utf8>> <= String >>.
+case_fold(Str) ->
+    << <<(char_fold(C))/utf8>> || <<C/utf8>> <= Str >>.
 
 -spec char_fold(char()) -> char().
 char_fold(C) ->
@@ -1097,7 +1097,7 @@ char_fold(C) ->
 -spec reverse(utf8_string()) -> utf8_string().
 reverse(<<>>) ->
     <<>>;
-reverse(_String = <<Char/utf8, Rest/bytes>>) ->
+reverse(_Str = <<Char/utf8, Rest/bytes>>) ->
     <<(reverse(Rest))/bytes, Char/utf8>>.
 
 %% @doc Extracts a substring. The substring starts at the given position. The
@@ -1106,14 +1106,14 @@ reverse(_String = <<Char/utf8, Rest/bytes>>) ->
 -spec substr(utf8_string(), integer()) -> utf8_string().
 substr(<<>>, _) ->
     <<>>;
-substr(String, 0) ->
-    String;
-substr(String, 1) ->
-    String;
+substr(Str, 0) ->
+    Str;
+substr(Str, 1) ->
+    Str;
 substr(<<_Char/utf8, Rest/bytes>>, Start) when Start > 1 ->
     substr(Rest, Start - 1);
-substr(String, Start) when Start < 0 ->
-    substr(String, 1 + length(String) + Start).
+substr(Str, Start) when Start < 0 ->
+    substr(Str, 1 + length(Str) + Start).
 
 %% @doc Extracts a substring. The substring starts at the given position and
 %% it has the given length. If the length is negative, then the substring ends
@@ -1122,10 +1122,10 @@ substr(String, Start) when Start < 0 ->
 -spec substr(utf8_string(), pos_integer(), integer()) -> utf8_string().
 substr(_, _, 0) ->
     <<>>;
-substr(String, Start, Length) when Length > 0 ->
-    substr(String, Start, Length - (1 + length(String) - Start));
-substr(String, Start, Length) when Length < 0 ->
-    reverse(substr(reverse(substr(String, Start)), 1 - Length)).
+substr(Str, Start, Length) when Length > 0 ->
+    substr(Str, Start, Length - (1 + length(Str) - Start));
+substr(Str, Start, Length) when Length < 0 ->
+    reverse(substr(reverse(substr(Str, Start)), 1 - Length)).
 
 %%% Local variables:
 %%% mode: erlang
