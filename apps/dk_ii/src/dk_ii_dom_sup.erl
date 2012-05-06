@@ -1,5 +1,5 @@
 %% @private
--module(dk_ifi_dom_sup).
+-module(dk_ii_dom_sup).
 
 -behaviour(supervisor).
 
@@ -17,13 +17,13 @@ name(DomId) ->
 
 add_cat(DomId, CatId) ->
     supervisor:start_child(
-      name(DomId), {dk_ifi_cat:name(DomId, CatId),
-                    {dk_ifi_cat, start_link, [DomId, CatId]},
-                    transient, 5000, worker, [dk_ifi_cat]}).
+      name(DomId), {dk_ii_cat:name(DomId, CatId),
+                    {dk_ii_cat, start_link, [DomId, CatId]},
+                    transient, 5000, worker, [dk_ii_cat]}).
 
 del_cat(DomId, CatId) ->
     SupRef = name(DomId),
-    Name = dk_ifi_cat:name(DomId, CatId),
+    Name = dk_ii_cat:name(DomId, CatId),
     supervisor:terminate_child(SupRef, Name),
     supervisor:delete_child(SupRef, Name).
 

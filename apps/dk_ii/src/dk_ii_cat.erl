@@ -1,5 +1,5 @@
 %% @private
--module(dk_ifi_cat).
+-module(dk_ii_cat).
 
 -behavior(gen_server).
 
@@ -79,7 +79,7 @@ code_change(_OldVsn, State, _Extra) ->
 %%% Internal functions
 
 tid(DomId, CatId) ->
-    list_to_atom("dk_ifi[" ++ DomId ++ "][" ++ CatId ++ "]").
+    list_to_atom("dk_ii[" ++ DomId ++ "][" ++ CatId ++ "]").
 
 %%% Local variables:
 %%% mode: erlang
