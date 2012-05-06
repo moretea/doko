@@ -1,5 +1,5 @@
 %% @private
--module(dk_ifi_sup).
+-module(dk_ii_sup).
 
 -behaviour(supervisor).
 
@@ -14,12 +14,12 @@
 
 add_dom(DomId) ->
     supervisor:start_child(
-      ?MODULE, {dk_ifi_dom_sup:name(DomId),
-                {dk_ifi_dom_sup, start_link, [DomId]},
-                transient, 5000, supervisor, [dk_ifi_dom_sup]}).
+      ?MODULE, {dk_ii_dom_sup:name(DomId),
+                {dk_ii_dom_sup, start_link, [DomId]},
+                transient, 5000, supervisor, [dk_ii_dom_sup]}).
 
 del_dom(DomId) ->
-    Name = dk_ifi_dom_sup:name(DomId),
+    Name = dk_ii_dom_sup:name(DomId),
     supervisor:terminate_child(?MODULE, Name),
     supervisor:delete_child(?MODULE, Name).
 

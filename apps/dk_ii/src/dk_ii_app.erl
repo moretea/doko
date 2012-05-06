@@ -1,5 +1,5 @@
 %% @private
--module(dk_ifi_app).
+-module(dk_ii_app).
 
 -behaviour(application).
 
@@ -8,7 +8,7 @@
 %%% application callbacks
 
 start(_StartType, _StartArgs) ->
-    dk_ifi_sup:start_link().
+    dk_ii_sup:start_link().
 
 stop(_State) ->
     ok.
