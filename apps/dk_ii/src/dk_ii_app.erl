@@ -1,9 +1,20 @@
+%% @private
+-module(dk_ii_app).
+
+-behaviour(application).
+
+%% application callbacks
+-export([start/2, stop/1]).
+
 %%----------------------------------------------------------------------------
-%% Type declarations
+%% application callbacks
 %%----------------------------------------------------------------------------
 
--type iso_639_1() :: nonempty_string(). % 2 letter language code
--type utf8_string() :: unicode:unicode_binary().
+start(_StartType, _StartArgs) ->
+    dk_ii_sup:start_link().
+
+stop(_State) ->
+    ok.
 
 %% Local variables:
 %% mode: erlang

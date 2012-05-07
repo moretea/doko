@@ -1,0 +1,7 @@
+%% -*- mode: erlang; fill-column: 78; -*-
+
+{application, dk_pp,
+ [{description, "Preprocessing library"},
+  {vsn, "0.1"},
+  {applications, [kernel, stdlib]},
+  {env, []}]}.

@@ -1,9 +1,0 @@
-%%% -*- mode: erlang; fill-column: 78; -*-
-
-{application, dk_ifi,
- [{description, "Inverted file index"},
-  {vsn, "0.1"},
-  {registered, []},
-  {applications, [kernel, stdlib]},
-  {mod, {dk_ifi_app, []}} ,
-  {env, []}]}.

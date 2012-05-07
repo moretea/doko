@@ -2,30 +2,33 @@
 -include("../include/dk_utf8.hrl").
 -compile({no_auto_import, [length/1]}).
 
+%% API
 -export([length/1]).
 -export([has_mb_char/1, suffix/2]).
 -export([case_fold/1, reverse/1]).
 -export([substr/2, substr/3]).
 
-%%% API
+%%----------------------------------------------------------------------------
+%% API
+%%----------------------------------------------------------------------------
 
 %% @doc Returns the length of a UTF-8 string.
 -spec length(utf8_string()) -> non_neg_integer().
 length(<<>>) ->
     0;
-length(_String = <<_Char/utf8, Rest/bytes>>) ->
+length(<<_Char/utf8, Rest/bytes>>) ->
     1 + length(Rest).
 
 %% @doc Returns true if a UTF-8 string contains a multibyte character.
 -spec has_mb_char(utf8_string()) -> boolean().
-has_mb_char(String) ->
-    lists:any(fun (C) -> C >= 128 end, binary:bin_to_list(String)).
+has_mb_char(Str) ->
+    lists:any(fun (C) -> C >= 128 end, binary:bin_to_list(Str)).
 
 %% @doc Returns true if a UTF-8 string ends with the given suffix.
 -spec suffix(utf8_string(), utf8_string()) -> boolean().
-suffix(Suffix, String) ->
+suffix(Suffix, Str) ->
     Xiffus = reverse(Suffix),
-    Gnirts = reverse(String),
+    Gnirts = reverse(Str),
     L = erlang:length(binary:bin_to_list(Suffix)),
     case Gnirts of
         <<Xiffus:L/bytes, _/bytes>> -> true;
@@ -34,8 +37,46 @@ suffix(Suffix, String) ->
 
 %% @doc Simple case folding. See [http://www.unicode.org/reports/tr44/].
 -spec case_fold(utf8_string()) -> utf8_string().
-case_fold(String) ->
-    << <<(char_fold(C))/utf8>> || <<C/utf8>> <= String >>.
+case_fold(Str) ->
+    << <<(char_fold(C))/utf8>> || <<C/utf8>> <= Str >>.
+
+%% @doc Reverses a UTF-8 string.
+-spec reverse(utf8_string()) -> utf8_string().
+reverse(<<>>) ->
+    <<>>;
+reverse(_Str = <<Char/utf8, Rest/bytes>>) ->
+    <<(reverse(Rest))/bytes, Char/utf8>>.
+
+%% @doc Extracts a substring. The substring starts at the given position. The
+%% first character is at position 1. If the position is negative, then the
+%% substring starts that far from the end of the string.
+-spec substr(utf8_string(), integer()) -> utf8_string().
+substr(<<>>, _) ->
+    <<>>;
+substr(Str, 0) ->
+    Str;
+substr(Str, 1) ->
+    Str;
+substr(<<_Char/utf8, Rest/bytes>>, Start) when Start > 1 ->
+    substr(Rest, Start - 1);
+substr(Str, Start) when Start < 0 ->
+    substr(Str, 1 + length(Str) + Start).
+
+%% @doc Extracts a substring. The substring starts at the given position and
+%% it has the given length. If the length is negative, then the substring ends
+%% that far from the end of the string. The start position can not be
+%% negative.
+-spec substr(utf8_string(), pos_integer(), integer()) -> utf8_string().
+substr(_, _, 0) ->
+    <<>>;
+substr(Str, Start, Length) when Length > 0 ->
+    substr(Str, Start, Length - (1 + length(Str) - Start));
+substr(Str, Start, Length) when Length < 0 ->
+    reverse(substr(reverse(substr(Str, Start)), 1 - Length)).
+
+%%----------------------------------------------------------------------------
+%% Internal functions
+%%----------------------------------------------------------------------------
 
 -spec char_fold(char()) -> char().
 char_fold(C) ->
@@ -1093,42 +1134,8 @@ char_fold(C) ->
         _ -> C
     end.
 
-%% @doc Reverses a UTF-8 string.
--spec reverse(utf8_string()) -> utf8_string().
-reverse(<<>>) ->
-    <<>>;
-reverse(_String = <<Char/utf8, Rest/bytes>>) ->
-    <<(reverse(Rest))/bytes, Char/utf8>>.
-
-%% @doc Extracts a substring. The substring starts at the given position. The
-%% first character is at position 1. If the position is negative, then the
-%% substring starts that far from the end of the string.
--spec substr(utf8_string(), integer()) -> utf8_string().
-substr(<<>>, _) ->
-    <<>>;
-substr(String, 0) ->
-    String;
-substr(String, 1) ->
-    String;
-substr(<<_Char/utf8, Rest/bytes>>, Start) when Start > 1 ->
-    substr(Rest, Start - 1);
-substr(String, Start) when Start < 0 ->
-    substr(String, 1 + length(String) + Start).
-
-%% @doc Extracts a substring. The substring starts at the given position and
-%% it has the given length. If the length is negative, then the substring ends
-%% that far from the end of the string. The start position can not be
-%% negative.
--spec substr(utf8_string(), pos_integer(), integer()) -> utf8_string().
-substr(_, _, 0) ->
-    <<>>;
-substr(String, Start, Length) when Length > 0 ->
-    substr(String, Start, Length - (1 + length(String) - Start));
-substr(String, Start, Length) when Length < 0 ->
-    reverse(substr(reverse(substr(String, Start)), 1 - Length)).
-
-%%% Local variables:
-%%% mode: erlang
-%%% fill-column: 78
-%%% coding: latin-1
-%%% End:
+%% Local variables:
+%% mode: erlang
+%% fill-column: 78
+%% coding: latin-1
+%% End:
