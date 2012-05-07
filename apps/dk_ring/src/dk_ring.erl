@@ -3,6 +3,7 @@
 -behaviour(gen_server).
 
 %% API
+-export([whereis/1]).
 -export([start_link/0]).
 
 %% gen_server callbacks
@@ -12,6 +13,7 @@
 %% Macro definitions
 -define(SERVER, ?MODULE).
 -define(RING_SIZE, 420). % 420 has many divisors
+-define(N_DUPS, 2). % number of duplicates (i.e. replication "level")
 
 %% Record declarations
 -record(ring, {map :: [{non_neg_integer(), node()}, ...]}).
@@ -20,6 +22,10 @@
 %%----------------------------------------------------------------------------
 %% API
 %%----------------------------------------------------------------------------
+
+%% @doc Returns the nodes where data is located.
+whereis(DataId) ->
+    gen_server:call(?SERVER, {whereis, DataId}).
 
 start_link() ->
     gen_server:start_link({local, ?SERVER}, ?MODULE, [], []).
@@ -38,8 +44,9 @@ init([]) ->
     {ok, #state{ring=Ring}}.
 
 %% @private
-handle_call(_Msg, _From, State) ->
-    Reply = ok,
+handle_call({whereis, DataId}, _From, State) ->
+    Ring = State#state.ring,
+    Reply = whereis(Ring, DataId),
     {reply, Reply, State}.
 
 %% @private
@@ -57,6 +64,25 @@ terminate(_Reason, _State) ->
 %% @private
 code_change(_OldVsn, State, _Extra) ->
     {ok, State}.
+
+%%----------------------------------------------------------------------------
+%% Internal functions
+%%----------------------------------------------------------------------------
+
+whereis(Ring, DataId) ->
+    Vnode = erlang:phash2(DataId, ?RING_SIZE),
+    Dict = orddict:filter(fun (Index, _Node) -> Index > Vnode end,
+                          Ring#ring.map),
+    Nodes = fetch_values(Dict) ++ fetch_values(Ring#ring.map),
+    Size = length(Ring#ring.map),
+    case Size < ?N_DUPS of
+        true -> lists:sublist(Nodes, Size);
+        false -> lists:sublist(Nodes, ?N_DUPS)
+    end.
+
+fetch_values(Dict) ->
+    lists:map(fun (Key) -> orddict:fetch(Key, Dict) end,
+              orddict:fetch_keys(Dict)).
 
 %% Local variables:
 %% mode: erlang
