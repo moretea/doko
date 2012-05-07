@@ -5,6 +5,6 @@
   {vsn, "0.1"},
   {registered, []},
   {applications, [kernel, stdlib]},
-  {mod, {doko_app, []}},
+  {mod, {dk_app, []}},
   {included_applications, [dk_ii, dk_meta]},
   {env, []}]}.
