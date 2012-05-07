@@ -1,5 +1,5 @@
 %% @private
--module(dk_sup).
+-module(dk_ring_sup).
 
 -behaviour(supervisor).
 
@@ -8,9 +8,6 @@
 
 %% supervisor callbacks
 -export([init/1]).
-
-%% Helper macro for declaring children of supervisor
--define(CHILD(I, Type), {I, {I, start_link, []}, permanent, 5000, Type, [I]}).
 
 %%----------------------------------------------------------------------------
 %% API
@@ -24,9 +21,8 @@ start_link() ->
 %%----------------------------------------------------------------------------
 
 init([]) ->
-    {ok, {{one_for_one, 5, 10}, [?CHILD(dk_ii_sup, supervisor),
-                                 ?CHILD(dk_meta_sup, supervisor),
-                                 ?CHILD(dk_ring_sup, supervisor)]}}.
+    {ok, {{one_for_one, 5, 10}, [{dk_ring, {dk_ring, start_link, []},
+                                 permanent, 2000, worker, [dk_ring]}]}}.
 
 %% Local variables:
 %% mode: erlang
