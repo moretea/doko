@@ -1,5 +1,5 @@
 %% @private
--module(dk_node_sup).
+-module(doko_sup).
 
 -behaviour(supervisor).
 

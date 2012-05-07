@@ -1,5 +1,5 @@
 %% @private
--module(dk_node_app).
+-module(doko_app).
 
 -behaviour(application).
 
@@ -11,7 +11,7 @@
 %%----------------------------------------------------------------------------
 
 start(_StartType, _StartArgs) ->
-    dk_node_sup:start_link().
+    doko_sup:start_link().
 
 stop(_State) ->
     ok.

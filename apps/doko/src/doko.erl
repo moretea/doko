@@ -1,4 +1,4 @@
--module(dk_node).
+-module(doko).
 
 %% API
 -export([start/0, stop/0]).
@@ -10,7 +10,7 @@
 
 %% @doc Starts the node.
 start() ->
-    application:start(dk_node).
+    application:start(doko).
 
 %% @doc Stops the node.
 stop() ->
