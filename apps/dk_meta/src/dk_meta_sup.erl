@@ -21,7 +21,8 @@ start_link() ->
 %%----------------------------------------------------------------------------
 
 init([]) ->
-    {ok, { {one_for_one, 5, 10}, []} }.
+    {ok, {{one_for_one, 5, 10}, [{dk_meta, {dk_meta, start_link, []},
+                                  permanent, 2000, worker, [dk_meta]}]} }.
 
 %% Local variables:
 %% mode: erlang
