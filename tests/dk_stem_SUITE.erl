@@ -30,7 +30,7 @@ vocab_stemmed(Lang, Config) ->
     lists:foreach(
       fun(Line) ->
               {match, [Word, Stem]} = re:run(Line, Re, Options),
-              Stem = apply(Mod, stem, [Word])
+              Stem = Mod:stem(Word)
       end,
       Lines).
 
