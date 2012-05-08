@@ -59,8 +59,8 @@ tree_to_query({kw_q, {string, Keyword, _}}, Lang) ->
     [Term | _] = dk_pp:terms(Keyword, Lang),
     #kw_q{kw = Term}.
 
-exec_q(DomId, CatId, Query) when is_record(Query, kw_q) ->
-    get_posts_list(DomId, CatId, Query#kw_q.kw).
+exec_q(DomId, CatId, #kw_q{kw = Kw}) ->
+    get_posts_list(DomId, CatId, Kw).
 %% exec_q(IndexGid, Query) when is_record(Query, not_q) ->
 %% exec_q(IndexGid, Query) when is_record(Query, and_q) ->
 %% exec_q(IndexGid, Query) when is_record(Query, or_q) ->
