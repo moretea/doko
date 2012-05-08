@@ -38,8 +38,7 @@ start_link() ->
 init([]) ->
     {ok, Nodes} = application:get_env(doko, nodes),
     Step = ?RING_SIZE / length(Nodes),
-    Indices = lists:map(fun (N) -> round(N * Step) end,
-                        lists:seq(0, length(Nodes) - 1)),
+    Indices = [round(N * Step) || N <- lists:seq(0, length(Nodes) - 1)],
     Ring = #ring{map = lists:zip(Indices, Nodes)},
     {ok, #state{ring=Ring}}.
 
@@ -81,8 +80,7 @@ whereis(Ring, DataId) ->
     end.
 
 fetch_values(Dict) ->
-    lists:map(fun (Key) -> orddict:fetch(Key, Dict) end,
-              orddict:fetch_keys(Dict)).
+    [orddict:fetch(Key, Dict) || Key <- orddict:fetch_keys(Dict)].
 
 %% Local variables:
 %% mode: erlang
