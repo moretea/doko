@@ -14,8 +14,7 @@ run_suites(Suites) ->
               Opts = [{suite, Suite}, {dir, "."}, {cover, Cover}],
               ct:run_test(Opts)
       end,
-      lists:map(fun (Suite) -> atom_to_list(Suite) ++ "_SUITE" end,
-                Suites)).
+      [atom_to_list(Suite) ++ "_SUITE" || Suite <- Suites]).
 
 %% Local variables:
 %% mode: erlang
