@@ -86,15 +86,14 @@ posts_list_receiver(Caller, Tag, DomId, CatId, Term) ->
               Mref = monitor(process, Caller),
               receive
                   {Caller, Tag} ->
-                      Keys = lists:map(
-                               fun (Node) ->
-                                       rpc:async_call(Node, dk_ii,
-                                                      get_posts_list,
-                                                      [DomId, CatId, Term])
-                                                      
-                               end,
-                               dk_ring:whereis({invix_data, {DomId, CatId,
-                                                             Term}})),
+                      AsyncCall = 
+                          fun (Node) ->
+                                  rpc:async_call(Node, dk_ii, get_posts_list,
+                                                 [DomId, CatId, Term])
+                          end,
+                      Nodes = dk_ring:whereis({invix_data,
+                                               {DomId, CatId, Term}}),
+                      Keys = lists:map(AsyncCall, Nodes),
                       Result = yield(Keys, 1, length(Keys)),
                       exit({self(), Tag, Result});
                   {'DOWN', Mref, _, _, _} ->
