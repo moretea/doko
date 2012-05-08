@@ -2,7 +2,7 @@
 
 %% API
 -export([start/0, start/1, stop/0]).
--export([add_dom/2, add_cat/2]).
+-export([add_dom/2, add_cat/2, add_doc/4]).
 
 %%----------------------------------------------------------------------------
 %% API
@@ -29,6 +29,10 @@ add_dom(DomId, Lang) ->
 %% @doc Adds a category.
 add_cat(DomId, CatId) ->
     dk_ii:add_cat(DomId, CatId).
+
+%% @doc Adds a document
+add_doc(DomId, CatId, DocId, Doc) ->
+    dk_in:add_doc(DomId, CatId, DocId, Doc).
 
 %% Local variables:
 %% mode: erlang
