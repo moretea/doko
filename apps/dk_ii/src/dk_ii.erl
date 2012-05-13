@@ -2,7 +2,8 @@
 
 %% API
 -export([add_dom/1, del_dom/1, add_cat/2, del_cat/2]).
--export([add_post/4, del_post/4, get_posts_list/3]).
+-export([add_post/4, del_post/4, get_posts/3]).
+-export([add_doc_id/3, del_doc_id/3, get_doc_ids/2]).
 
 %%----------------------------------------------------------------------------
 %% API
@@ -33,8 +34,20 @@ del_post(DomId, CatId, DocId, Term) ->
     dk_ii_cat:del_post(DomId, CatId, DocId, Term).
 
 %% @doc Returns the inversed list for a term.
-get_posts_list(DomId, CatId, Term) ->
-    dk_ii_cat:get_posts_list(DomId, CatId, Term).
+get_posts(DomId, CatId, Term) ->
+    dk_ii_cat:get_posts(DomId, CatId, Term).
+
+%% @doc Adds a document ID.
+add_doc_id(DomId, CatId, DocId) ->
+    dk_ii_cat:add_doc_id(DomId, CatId, DocId).
+    
+%% @doc Deletes a document ID.
+del_doc_id(DomId, CatId, DocId) ->
+    dk_ii_cat:del_doc_id(DomId, CatId, DocId).
+    
+%% @doc Returns the IDs of all documents in a category.
+get_doc_ids(DomId, CatId) ->
+    dk_ii_cat:get_doc_ids(DomId, CatId).
 
 %% Local variables:
 %% mode: erlang
