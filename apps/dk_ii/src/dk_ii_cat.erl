@@ -5,7 +5,7 @@
 
 %% API
 -export([name/2]).
--export([add_post/4, del_post/4, get_posts_list/3]).
+-export([add_post/4, del_post/4, get_posts/3]).
 -export([start_link/2]).
 
 %% gen_server callbacks
@@ -29,7 +29,7 @@ add_post(DomId, CatId, DocId, Term) ->
 del_post(DomId, CatId, DocId, Term) ->
     gen_server:cast(name(DomId, CatId), {del, Term, DocId}).
 
-get_posts_list(DomId, CatId, Term) ->
+get_posts(DomId, CatId, Term) ->
     case ets:lookup(tid(DomId, CatId), Term) of
         [] -> sets:new();
         [{Term, Set}] -> Set

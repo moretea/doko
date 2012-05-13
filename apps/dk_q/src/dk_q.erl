@@ -60,14 +60,14 @@ tree_to_query({kw_q, {string, Keyword, _}}, Lang) ->
     #kw_q{kw = Term}.
 
 exec_q(DomId, CatId, #kw_q{kw = Kw}) ->
-    get_posts_list(DomId, CatId, Kw);
+    get_posts(DomId, CatId, Kw);
 exec_q(DomId, CatId, #and_q{subs = Subs}) ->
     sets:intersection([exec_q(DomId, CatId, Sub) || Sub <- Subs]);
 exec_q(DomId, CatId, #or_q{subs = Subs}) ->
     sets:union([exec_q(DomId, CatId, Sub) || Sub <- Subs]).
 %% exec_q(DomId, CatId, #not_q{sub = Sub}) ->
 
-get_posts_list(DomId, CatId, Term) ->
+get_posts(DomId, CatId, Term) ->
     Caller = self(),
     Tag = make_ref(),
     Receiver = posts_list_receiver(Caller, Tag, DomId, CatId, Term),
@@ -90,7 +90,7 @@ posts_list_receiver(Caller, Tag, DomId, CatId, Term) ->
                   {Caller, Tag} ->
                       AsyncCall = 
                           fun (Node) ->
-                                  rpc:async_call(Node, dk_ii, get_posts_list,
+                                  rpc:async_call(Node, dk_ii, get_posts,
                                                  [DomId, CatId, Term])
                           end,
                       Nodes = dk_ring:whereis({invix_data,
