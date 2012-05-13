@@ -30,7 +30,7 @@ add_dom(DomId, Lang) ->
 add_cat(DomId, CatId) ->
     dk_ii:add_cat(DomId, CatId).
 
-%% @doc Adds a document
+%% @doc Adds a document.
 add_doc(DomId, CatId, DocId, Doc) ->
     dk_in:add_doc(DomId, CatId, DocId, Doc).
 
