@@ -64,13 +64,22 @@ exec_q(DomId, CatId, #kw_q{kw = Kw}) ->
 exec_q(DomId, CatId, #and_q{subs = Subs}) ->
     sets:intersection([exec_q(DomId, CatId, Sub) || Sub <- Subs]);
 exec_q(DomId, CatId, #or_q{subs = Subs}) ->
-    sets:union([exec_q(DomId, CatId, Sub) || Sub <- Subs]).
-%% exec_q(DomId, CatId, #not_q{sub = Sub}) ->
+    sets:union([exec_q(DomId, CatId, Sub) || Sub <- Subs]);
+exec_q(DomId, CatId, #not_q{sub = Sub}) ->
+    sets:subtract(get_doc_ids(DomId, CatId), exec_q(DomId, CatId, Sub)).
 
 get_posts(DomId, CatId, Term) ->
+    Nodes = dk_ring:whereis({invix_data, {DomId, CatId, Term}}),
+    get_data(Nodes, get_posts, [DomId, CatId, Term]).
+
+get_doc_ids(DomId, CatId) ->
+    Nodes = dk_ring:whereis({cat_data, {DomId, CatId}}),
+    get_data(Nodes, get_doc_ids, [DomId, CatId]).
+
+get_data(Nodes, Fun, Args) ->
     Caller = self(),
     Tag = make_ref(),
-    Receiver = posts_list_receiver(Caller, Tag, DomId, CatId, Term),
+    Receiver = receiver(Caller, Tag, Nodes, Fun, Args),
     Mref = monitor(process, Receiver),
     Receiver ! {self(), Tag},
     receive
@@ -81,7 +90,7 @@ get_posts(DomId, CatId, Term) ->
             exit(Reason)
     end.
 
-posts_list_receiver(Caller, Tag, DomId, CatId, Term) ->
+receiver(Caller, Tag, Nodes, Fun, Args) ->
     spawn(
       fun() ->
               process_flag(trap_exit, true),
@@ -90,11 +99,8 @@ posts_list_receiver(Caller, Tag, DomId, CatId, Term) ->
                   {Caller, Tag} ->
                       AsyncCall = 
                           fun (Node) ->
-                                  rpc:async_call(Node, dk_ii, get_posts,
-                                                 [DomId, CatId, Term])
+                                  rpc:async_call(Node, dk_ii, Fun, Args)
                           end,
-                      Nodes = dk_ring:whereis({invix_data,
-                                               {DomId, CatId, Term}}),
                       Keys = lists:map(AsyncCall, Nodes),
                       Result = yield(Keys, 1, length(Keys)),
                       exit({self(), Tag, Result});

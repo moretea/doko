@@ -24,7 +24,9 @@ add_doc(DomId, CatId, DocId, Doc) ->
     {ok, Lang} = dk_meta:dom_lang(DomId),
     lists:foreach(
       fun (Term) -> add_post(DomId, CatId, DocId, Term) end,
-      lists:usort(dk_pp:terms(Doc, Lang))).
+      lists:usort(dk_pp:terms(Doc, Lang))),
+    add_doc_id(DomId, CatId, DocId),
+    ok.
 
 add_post(DomId, CatId, DocId, Term) ->
     Nodes = dk_ring:whereis({invix_data, {DomId, CatId, Term}}),
@@ -34,6 +36,17 @@ add_post(DomId, CatId, DocId, Term) ->
     Timeout = infinity,
     {_, []} = rpc:multicall(Nodes,
                             dk_ii, add_post, [DomId, CatId, DocId, Term],
+                            Timeout),
+    ok.
+
+add_doc_id(DomId, CatId, DocId) ->
+    Nodes = dk_ring:whereis({cat_data, {DomId, CatId}}),
+    %% TO-DO:
+    %% - choose timeout value
+    %% - handle "bad" nodes
+    Timeout = infinity,
+    {_, []} = rpc:multicall(Nodes,
+                            dk_ii, add_doc_id, [DomId, CatId, DocId],
                             Timeout),
     ok.
 
