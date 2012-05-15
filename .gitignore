@@ -5,6 +5,7 @@
 /apps/*/doc/*
 !/apps/*/doc/overview.edoc
 /nonpublic/
+/site/
 /tests/*/*.logs/*
 /tests/ct_run.*
 /tests/variables-*
