@@ -3,7 +3,7 @@
 -behaviour(gen_server).
 
 %% API
--export([whereis/1]).
+-export([nodes/0, whereis/1]).
 -export([start_link/0]).
 
 %% gen_server callbacks
@@ -17,11 +17,14 @@
 
 %% Record declarations
 -record(ring, {map :: [{non_neg_integer(), node()}, ...]}).
--record(state, {ring}).
+-record(state, {nodes, ring}).
 
 %%----------------------------------------------------------------------------
 %% API
 %%----------------------------------------------------------------------------
+
+nodes() ->
+    gen_server:call(?SERVER, nodes).
 
 %% @doc Returns the nodes where data is located.
 whereis(DataId) ->
@@ -40,12 +43,15 @@ init([]) ->
     Step = ?RING_SIZE / length(Nodes),
     Indices = [round(N * Step) || N <- lists:seq(0, length(Nodes) - 1)],
     Ring = #ring{map = lists:zip(Indices, Nodes)},
-    {ok, #state{ring=Ring}}.
+    {ok, #state{nodes = Nodes, ring=Ring}}.
 
 %% @private
 handle_call({whereis, DataId}, _From, State) ->
     Ring = State#state.ring,
     Reply = whereis(Ring, DataId),
+    {reply, Reply, State};
+handle_call(nodes, _From, State) ->
+    Reply = State#state.nodes,
     {reply, Reply, State}.
 
 %% @private

@@ -5,10 +5,6 @@
 /apps/*/doc/*
 !/apps/*/doc/overview.edoc
 /nonpublic/
-/site.rwsw/
-/tests/*/*.logs/*
-/tests/ct_run.*
-/tests/variables-*
 ebin/
 erl_crash.dump
 /apps/dk_q/src/dk_q_parser.erl

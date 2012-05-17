@@ -11,7 +11,8 @@
 
 %% @doc Adds a domain.
 add_dom(DomId) ->
-    dk_ii_sup:add_dom(DomId).
+    {ok, _Pid} = dk_ii_sup:add_dom(DomId),
+    ok.
 
 %% @doc Deletes a domain.
 del_dom(DomId) ->
@@ -19,7 +20,8 @@ del_dom(DomId) ->
 
 %% @doc Adds a category.
 add_cat(DomId, CatId) ->
-    dk_ii_dom_sup:add_cat(DomId, CatId).
+    {ok, _Pid} = dk_ii_dom_sup:add_cat(DomId, CatId),
+    ok.
 
 %% @doc Deletes a category.
 del_cat(DomId, CatId) ->

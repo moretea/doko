@@ -1,4 +1,4 @@
--module(dk_test).
+-module(test_utils).
 
 %% API
 -export([run_suites/1]).
@@ -10,8 +10,9 @@
 run_suites(Suites) ->
     lists:foreach(
       fun (Suite) ->
-              Cover = Suite ++ "_cover.spec",
-              Opts = [{suite, Suite}, {dir, "."}, {cover, Cover}],
+              Cover = Suite ++ ".spec",
+              Opts = [{suite, Suite}, {dir, "."}, {cover, Cover},
+                      {logdir, "logs"}],
               ct:run_test(Opts)
       end,
       [atom_to_list(Suite) ++ "_SUITE" || Suite <- Suites]).
