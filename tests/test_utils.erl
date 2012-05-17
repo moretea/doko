@@ -11,7 +11,8 @@ run_suites(Suites) ->
     lists:foreach(
       fun (Suite) ->
               Cover = Suite ++ ".spec",
-              Opts = [{suite, Suite}, {dir, "."}, {cover, Cover}],
+              Opts = [{suite, Suite}, {dir, "."}, {cover, Cover},
+                      {logdir, "logs"}],
               ct:run_test(Opts)
       end,
       [atom_to_list(Suite) ++ "_SUITE" || Suite <- Suites]).

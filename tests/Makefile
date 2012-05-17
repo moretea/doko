@@ -1,5 +1,8 @@
 default:
-	@echo "default target intentionally left empty"
+	erlc -W test_utils.erl
 
 clean:
-	@rm -Rf *.beam *.css *.html ct_run.* variables-*
+	@rm -Rfl logs/* *SUITE.beam
+
+realclean: clean
+	@rm -f test_utils.beam
