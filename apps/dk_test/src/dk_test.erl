@@ -10,7 +10,7 @@
 run_suites(Suites) ->
     lists:foreach(
       fun (Suite) ->
-              Cover = Suite ++ "_cover.spec",
+              Cover = Suite ++ ".spec",
               Opts = [{suite, Suite}, {dir, "."}, {cover, Cover}],
               ct:run_test(Opts)
       end,
