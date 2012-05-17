@@ -1,4 +1,4 @@
--module(dk_test).
+-module(test_utils).
 
 %% API
 -export([run_suites/1]).
