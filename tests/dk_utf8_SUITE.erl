@@ -37,12 +37,12 @@ test_reverse(_Config) ->
 
 test_substr(_Config) ->
     Phrase = unicode:characters_to_binary("à la carte", latin1),
-    %%                                     123456789
+    %%                                     0123456789
     %%                                      987654321
-    <<"la carte">> = dk_utf8:substr(Phrase, 3),
-    <<"la">> = dk_utf8:substr(Phrase, 3, 2),
+    <<"la carte">> = dk_utf8:substr(Phrase, 2),
+    <<"la">> = dk_utf8:substr(Phrase, 2, 2),
     <<"carte">> = dk_utf8:substr(Phrase, -5),
-    <<" la ">> = dk_utf8:substr(Phrase, 2, -5),
+    <<" la ">> = dk_utf8:substr(Phrase, 1, -5),
     <<"r">> = dk_utf8:substr(Phrase, -3, -2),
     <<>> = dk_utf8:substr(Phrase, -2, -3),
     ok.

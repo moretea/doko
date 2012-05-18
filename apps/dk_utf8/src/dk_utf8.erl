@@ -48,19 +48,17 @@ reverse(_Str = <<Char/utf8, Rest/bytes>>) ->
     <<(reverse(Rest))/bytes, Char/utf8>>.
 
 %% @doc Extracts a substring. The substring starts at the given position. The
-%% first character is at position 1. If the position is negative, then the
+%% first character is at position 0. If the position is negative, then the
 %% substring starts that far from the end of the string.
 -spec substr(utf8_string(), integer()) -> utf8_string().
 substr(<<>>, _) ->
     <<>>;
 substr(Str, 0) ->
     Str;
-substr(Str, 1) ->
-    Str;
-substr(<<_Char/utf8, Rest/bytes>>, Start) when Start > 1 ->
+substr(<<_Char/utf8, Rest/bytes>>, Start) when Start > 0 ->
     substr(Rest, Start - 1);
 substr(Str, Start) when Start < 0 ->
-    substr(Str, 1 + length(Str) + Start).
+    substr(Str, length(Str) + Start).
 
 %% @doc Extracts a substring. The substring starts at the given position and
 %% it has the given length. If the length is negative, then the substring ends
@@ -70,9 +68,9 @@ substr(Str, Start) when Start < 0 ->
 substr(_, _, 0) ->
     <<>>;
 substr(Str, Start, Length) when Length > 0 ->
-    substr(Str, Start, Length - (1 + length(Str) - Start));
+    substr(Str, Start, Length - (length(Str) - Start));
 substr(Str, Start, Length) when Length < 0 ->
-    reverse(substr(reverse(substr(Str, Start)), 1 - Length)).
+    reverse(substr(reverse(substr(Str, Start)), -Length)).
 
 %%----------------------------------------------------------------------------
 %% Internal functions

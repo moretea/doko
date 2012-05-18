@@ -9,7 +9,8 @@
 -include("../../dk_utf8/include/dk_utf8.hrl").
 
 %% API
--export([stem/1]).
+%% -export([stem/1]).
+-compile(export_all).
 
 %% Marco definitions
 -define(VOWELS, <<"aeiouy", 16#C3A8:16>>).
@@ -43,12 +44,12 @@ step1(Word) ->
     S = dk_utf8:suffix(<<"s">>, R1),
     if
         Heden ->
-            <<(dk_utf8:substr(Word, 1, -5))/bytes, "heid">>;
+            <<(dk_utf8:substr(Word, 0, -5))/bytes, "heid">>;
         Ene or En ->
             WordHeden = dk_utf8:suffix(<<"heden">>, Word),
             NewWord = if
-                          En -> dk_utf8:substr(Word, 1, -2);
-                          Ene -> dk_utf8:substr(Word, 1, -3)
+                          En -> dk_utf8:substr(Word, 0, -2);
+                          Ene -> dk_utf8:substr(Word, 0, -3)
                       end,
             ValidEnding = valid_en_ending(NewWord),
             if
@@ -57,8 +58,8 @@ step1(Word) ->
             end;
         Se or S ->
             NewWord = if
-                          S -> dk_utf8:substr( Word, 1, -1);
-                          Se -> dk_utf8:substr( Word, 1, -2)
+                          S -> dk_utf8:substr( Word, 0, -1);
+                          Se -> dk_utf8:substr( Word, 0, -2)
                       end,
             ValidEnding = valid_s_ending(NewWord),
             if
@@ -83,7 +84,7 @@ step2(Word) ->
                 nomatch ->
                     {Word, false};
                 _ ->
-                    NewWord = undouble_end(dk_utf8:substr(Word, 1, -1)),
+                    NewWord = undouble_end(dk_utf8:substr(Word, 0, -1)),
                     {NewWord, true}
             end
     end.
@@ -97,21 +98,21 @@ step3a({Word, Step2Success}) ->
         (not Heid) or Cheid ->
             {Word, Step2Success};
         true ->
-            NewWord = dk_utf8:substr(Word, 1, -4),
-            NewR1 = dk_utf8:substr(R1, 1, -4),
+            NewWord = dk_utf8:substr(Word, 0, -4),
+            NewR1 = dk_utf8:substr(R1, 0, -4),
             En = dk_utf8:suffix(<<"en">>, NewR1),
             if
                 not En ->
                     {NewWord, Step2Success};
                 true ->
                      ValidEnding =
-                        valid_en_ending(dk_utf8:substr(NewR1, 1, -2)),
+                        valid_en_ending(dk_utf8:substr(NewR1, 0, -2)),
                     if
                         not ValidEnding ->
                             {NewWord, Step2Success};
                         true ->
                             NewNewWord = undouble_end(
-                                           dk_utf8:substr(NewWord, 1, -2)),
+                                           dk_utf8:substr(NewWord, 0, -2)),
                             {NewNewWord, Step2Success}
                     end
             end
@@ -128,25 +129,25 @@ step3b({Word, Step2Success}) ->
     Bar = dk_utf8:suffix(<<"bar">>, R2),
     if
         End or Ing ->
-            NewWord = dk_utf8:substr(Word, 1, -3),
-            NewR2 = dk_utf8:substr(R2, 1, -3),
+            NewWord = dk_utf8:substr(Word, 0, -3),
+            NewR2 = dk_utf8:substr(R2, 0, -3),
             Ig2 = dk_utf8:suffix(<<"ig">>, NewR2),
             Eig2 = dk_utf8:suffix(<<"eig">>, NewWord),
             if
                 Ig2 and not Eig2 ->
-                    dk_utf8:substr(NewWord, 1, -2);
+                    dk_utf8:substr(NewWord, 0, -2);
                 true ->
                     undouble_end(NewWord)
             end;
         Ig and not Eig ->
-            dk_utf8:substr(Word, 1, -2);
+            dk_utf8:substr(Word, 0, -2);
         Lijk ->
-            {NewWord, _} = step2(dk_utf8:substr(Word, 1, -4)),
+            {NewWord, _} = step2(dk_utf8:substr(Word, 0, -4)),
             NewWord;
         Baar ->
-            dk_utf8:substr(Word, 1, -4);
+            dk_utf8:substr(Word, 0, -4);
         Bar and Step2Success ->
-            dk_utf8:substr(Word, 1, -3);
+            dk_utf8:substr(Word, 0, -3);
         true ->
             Word
     end.
@@ -178,13 +179,13 @@ standard_r1_r2(Word) ->
 adjust_r1(Word, <<V/utf8, C/utf8, L1/utf8, L2/utf8>>, R1) ->
     Test = vowel(V) and not vowel(C),
     case Test of
-        true -> dk_utf8:substr(Word, 4);
+        true -> dk_utf8:substr(Word, 3);
         false -> adjust_r1(Word, <<C/utf8, L1/utf8, L2/utf8>>, R1)
     end;
 adjust_r1(Word, <<V/utf8, C/utf8, _/utf8>>, R1) ->
     Test = vowel(V) and not vowel(C),
     case Test of
-        true -> dk_utf8:substr(Word, 4);
+        true -> dk_utf8:substr(Word, 3);
         false -> R1
     end;
 adjust_r1(Word, <<_/utf8, Rest/bytes>>, R1) ->
@@ -225,7 +226,7 @@ undouble_end(Word) ->
                 dk_utf8:suffix(<<"dd">>, Word) or
                 dk_utf8:suffix(<<"tt">>, Word),
     if
-        DoubleEnd -> dk_utf8:substr(Word, 1, -1);
+        DoubleEnd -> dk_utf8:substr(Word, 0, -1);
         true -> Word
     end.
 

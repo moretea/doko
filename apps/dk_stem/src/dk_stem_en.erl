@@ -67,9 +67,9 @@ step0(Word) ->
     Apo_s = dk_utf8:suffix(<<"'s">>, Word),
     Apo = dk_utf8:suffix(<<"'">>, Word),
     if
-        Apo_s_apo -> dk_utf8:substr(Word, 1, -3);
-        Apo_s -> dk_utf8:substr(Word, 1, -2);
-        Apo -> dk_utf8:substr(Word, 1, -1);
+        Apo_s_apo -> dk_utf8:substr(Word, 0, -3);
+        Apo_s -> dk_utf8:substr(Word, 0, -2);
+        Apo -> dk_utf8:substr(Word, 0, -1);
         true -> Word
     end.
 
@@ -82,18 +82,18 @@ step1a(Word) ->
     S = dk_utf8:suffix(<<"s">>, Word),
     if
         Sses ->
-            dk_utf8:substr(Word, 1, -2);
+            dk_utf8:substr(Word, 0, -2);
         Ied or Ies ->
             case dk_utf8:length(Word) of
-                3 -> dk_utf8:substr(Word, 1, 2);
-                4 -> dk_utf8:substr(Word, 1, 3);
-                _ -> dk_utf8:substr(Word, 1, -2)
+                3 -> dk_utf8:substr(Word, 0, 2);
+                4 -> dk_utf8:substr(Word, 0, 3);
+                _ -> dk_utf8:substr(Word, 0, -2)
             end;
         Us or Ss ->
             Word;
         S ->
-            case vowel(dk_utf8:substr(Word, 1, -2)) of
-                true -> dk_utf8:substr(Word, 1, -1);
+            case vowel(dk_utf8:substr(Word, 0, -2)) of
+                true -> dk_utf8:substr(Word, 0, -1);
                 false -> Word
             end;
         true ->
@@ -111,12 +111,12 @@ step1b(Word) ->
     if
         Eed -> 
             case dk_utf8:suffix(<<"eed">>, R1) of
-                true -> dk_utf8:substr(Word, 1, -1);
+                true -> dk_utf8:substr(Word, 0, -1);
                 false -> Word
             end;
         Eedly ->
             case dk_utf8:suffix(<<"eedly">>, R1) of
-                true -> dk_utf8:substr(Word, 1, -3);
+                true -> dk_utf8:substr(Word, 0, -3);
                 false -> Word
             end;
         Ed -> del_1b(Word, -2);
@@ -127,7 +127,7 @@ step1b(Word) ->
     end.
 
 del_1b(Word, N) ->
-    NewWord = dk_utf8:substr(Word, 1, N),
+    NewWord = dk_utf8:substr(Word, 0, N),
     case vowel(NewWord) of
         false -> Word;
         true ->
@@ -138,7 +138,7 @@ del_1b(Word, N) ->
                 true -> <<NewWord/bytes, "e">>;
                 false ->
                     case double_end(NewWord) of
-                        true -> dk_utf8:substr(NewWord, 1, -1);
+                        true -> dk_utf8:substr(NewWord, 0, -1);
                         false ->
                             case short(NewWord) of
                                 true -> <<NewWord/bytes, "e">>;
@@ -155,7 +155,7 @@ step1c(Word) ->
             Regex = [<<"[^">>, ?VOWELS, <<"][yY]$">>],
             Options = [unicode, {capture, none}],
             case re:run(Word, Regex, Options) of
-                match -> <<(dk_utf8:substr(Word, 1, -1))/bytes, "i">>;
+                match -> <<(dk_utf8:substr(Word, 0, -1))/bytes, "i">>;
                 nomatch -> Word
             end
     end.
@@ -187,17 +187,17 @@ step2(Word) ->
     Pred = fun({Suffix, _}) -> not dk_utf8:suffix(Suffix, R1) end,
     case lists:dropwhile(Pred, List) of
         [{Suffix, NewSuffix} | _] ->
-            Prefix = dk_utf8:substr(Word, 1, -(dk_utf8:length(Suffix))),
+            Prefix = dk_utf8:substr(Word, 0, -(dk_utf8:length(Suffix))),
             <<Prefix/bytes, NewSuffix/bytes>>;
         [] ->
             Ogi = dk_utf8:suffix(<<"ogi">>, R1),
             Logi = dk_utf8:suffix(<<"logi">>, Word),
             if
                 Ogi and Logi ->
-                    dk_utf8:substr(Word, 1, -1);
+                    dk_utf8:substr(Word, 0, -1);
                 true ->
                     Suffix = dk_utf8:suffix(<<"li">>, R1),
-                    NewWord = dk_utf8:substr(Word, 1, -2),
+                    NewWord = dk_utf8:substr(Word, 0, -2),
                     Ending = valid_li_ending(NewWord),
                     case {Suffix, Ending} of
                         {true, true} -> NewWord;
@@ -219,11 +219,11 @@ step3(Word) ->
     Pred = fun({Suffix, _}) -> not dk_utf8:suffix(Suffix, R1) end,
     case lists:dropwhile(Pred, List) of
         [{Suffix, NewSuffix} | _] ->
-            Prefix = dk_utf8:substr(Word, 1, -(dk_utf8:length(Suffix))),
+            Prefix = dk_utf8:substr(Word, 0, -(dk_utf8:length(Suffix))),
             <<Prefix/bytes, NewSuffix/bytes>>;
         [] ->
             case dk_utf8:suffix(<<"ative">>, R2) of
-                true -> dk_utf8:substr(Word, 1, -5);
+                true -> dk_utf8:substr(Word, 0, -5);
                 _ -> Word
             end
     end.
@@ -238,7 +238,7 @@ step4(Word) ->
         [Suffix | _] ->
             case dk_utf8:suffix(Suffix, R2) of
                 true ->
-                    dk_utf8:substr(Word, 1, -(dk_utf8:length(Suffix)));
+                    dk_utf8:substr(Word, 0, -(dk_utf8:length(Suffix)));
                 false ->
                     Word
             end;
@@ -247,7 +247,7 @@ step4(Word) ->
             Tion = dk_utf8:suffix(<<"tion">>, Word),
             Sion = dk_utf8:suffix(<<"sion">>, Word),
             if
-                Ion and (Tion or Sion) -> dk_utf8:substr(Word, 1, -3);
+                Ion and (Tion or Sion) -> dk_utf8:substr(Word, 0, -3);
                 true -> Word
             end
     end.
@@ -260,13 +260,13 @@ step5(Word) ->
     DoubleL = dk_utf8:suffix(<<"ll">>, Word),
     if
         SuffixL and DoubleL ->
-            dk_utf8:substr(Word, 1, -1);
+            dk_utf8:substr(Word, 0, -1);
         R2E ->
-            dk_utf8:substr(Word, 1, -1);
+            dk_utf8:substr(Word, 0, -1);
         R1E ->
-            NewWord = dk_utf8:substr(Word, 1, -1),
+            NewWord = dk_utf8:substr(Word, 0, -1),
             case short_syllable(dk_utf8:substr(NewWord, -3)) of 
-                false -> dk_utf8:substr(Word, 1, -1);
+                false -> dk_utf8:substr(Word, 0, -1);
                 true -> Word
             end;
         true ->
@@ -294,7 +294,9 @@ short_syllable(<<C1/utf8, C2/utf8, C3/utf8>>) ->
     (not vowel(C1)) and vowel(C2) and (not vowel(C3)) and (C3 /= $w) and
         (C3 /= $x) and (C3 /= $Y);
 short_syllable(<<C1/utf8, C2/utf8>>) ->
-    vowel(C1) and not vowel(C2).
+    vowel(C1) and not vowel(C2);
+short_syllable(_) ->
+    true.
 
 double_end(Word) ->
     lists:member(dk_utf8:substr(Word, -2),
