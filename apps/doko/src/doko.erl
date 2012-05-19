@@ -2,7 +2,7 @@
 
 %% API
 -export([start/1, stop/0]).
--export([add_dom/2, add_cat/2, add_doc/4]).
+-export([add_dom/2, del_dom/1, add_cat/2, add_doc/4]).
 -export([run_query/3]).
 
 %%----------------------------------------------------------------------------
@@ -25,6 +25,15 @@ add_dom(DomId, Lang) ->
     Result = lists:duplicate(length(Nodes), ok),
     {Result, []} = rpc:multicall(Nodes, dk_meta, add_dom, [DomId, Lang]),
     {Result, []} = rpc:multicall(Nodes, dk_ii, add_dom, [DomId]),
+    ok.
+
+%% @doc Deletes a domain.
+del_dom(DomId) ->
+    Nodes = dk_ring:nodes(),
+    %% TO-DO: handle errors
+    Result = lists:duplicate(length(Nodes), ok),
+    {Result, []} = rpc:multicall(Nodes, dk_meta, del_dom, [DomId]),
+    {Result, []} = rpc:multicall(Nodes, dk_ii, del_dom, [DomId]),
     ok.
 
 %% @doc Adds a category.
