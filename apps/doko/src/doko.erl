@@ -1,13 +1,18 @@
 -module(doko).
 
 %% API
--export([start/1, stop/0]).
+-export([start/0, start/1, stop/0]).
 -export([add_dom/2, del_dom/1, add_cat/2, add_doc/4]).
 -export([run_query/3]).
 
 %%----------------------------------------------------------------------------
 %% API
 %%----------------------------------------------------------------------------
+
+%% Starts a node in stand-alone mode.
+start() ->
+    application:set_env(doko, nodes, [node()]),
+    application:start(doko).
 
 %% Starts a node as part of a cluster.
 start(Nodes) ->
