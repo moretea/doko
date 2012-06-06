@@ -9,3 +9,4 @@ ebin/
 erl_crash.dump
 /apps/dk_q/src/dk_q_parser.erl
 /.DS_Store
+/data/
