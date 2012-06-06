@@ -1,7 +1,7 @@
 -module(dk_in).
 
 %% API
--export([add_doc/4]).
+-export([create_index/3, add_doc/4]).
 
 %% For internal use only
 -export(['_add_doc'/4]).
@@ -9,6 +9,14 @@
 %%----------------------------------------------------------------------------
 %% API
 %%----------------------------------------------------------------------------
+
+create_index(_DomId, _CatId, File) ->
+    %% add domain
+    %% add cat
+    %% open file
+    {ok, Binary} = file:read_file(File),
+    %% build "posts list" (i.e. [{Term, DocId}, {Term, DocId}, ...])
+    posts_list(Binary).
 
 %% @doc Adds a document.
 add_doc(DomId, CatId, DocId, Doc) ->
@@ -18,6 +26,17 @@ add_doc(DomId, CatId, DocId, Doc) ->
 %%----------------------------------------------------------------------------
 %% Internal functions
 %%----------------------------------------------------------------------------
+
+posts_list(Binary) ->
+    posts_list(Binary, []).
+
+posts_list(<<>>, Acc) ->
+    Acc;
+posts_list(Binary, Acc) ->
+    [Line, Rest] = binary:split(Binary, <<"\n">>), %% does this work correctly with UTF-8?
+    [Id, Text] = binary:split(Line, <<" ">>),
+    _Terms = dk_pp:terms(Text, "en"),
+    posts_list(Rest, [Id | Acc]).
 
 %% @private
 '_add_doc'(DomId, CatId, DocId, Doc) ->
