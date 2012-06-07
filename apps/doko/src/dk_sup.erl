@@ -26,6 +26,7 @@ start_link() ->
 init([]) ->
     {ok, {{one_for_one, 5, 10}, [?CHILD(dk_ii_sup, supervisor),
                                  ?CHILD(dk_meta_sup, supervisor),
+                                 ?CHILD(dk_nii_sup, supervisor),
                                  ?CHILD(dk_ring_sup, supervisor)]}}.
 
 %% Local variables:
