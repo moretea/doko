@@ -1,16 +1,14 @@
--module(dk_nii).
--include("dk_nii.hrl").
+-module(dk_nii_reg).
 
 -behaviour(gen_server).
 
 %% API
--export([start_link/0]).
+-export([name/1]).
+-export([start_link/1]).
 
 %% gen_server callbacks
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2,
          code_change/3]).
-
--define(SERVER, ?MODULE).
 
 -record(state, {}).
 
@@ -18,8 +16,11 @@
 %% API
 %%----------------------------------------------------------------------------
 
-start_link() ->
-    gen_server:start_link({local, ?SERVER}, ?MODULE, [], []).
+name(N) ->
+    list_to_atom(?MODULE_STRING ++ "[" ++ integer_to_list(N) ++ "]").
+
+start_link(Name) ->
+    gen_server:start_link({local, Name}, ?MODULE, [], []).
 
 %%----------------------------------------------------------------------------
 %% gen_server callbacks

@@ -1,5 +1,6 @@
 %% @private
--module(dk_nii_sup).
+-module(dk_nii_reg_sup).
+-include("dk_nii.hrl").
 
 -behaviour(supervisor).
 
@@ -21,12 +22,17 @@ start_link() ->
 %%----------------------------------------------------------------------------
 
 init([]) ->
-    {ok,
-     {{one_for_one, 5, 10},
-      [{dk_nii, {dk_nii, start_link, []},
-        permanent, 2000, worker, [dk_nii]},
-       {dk_nii_reg_sup, {dk_nii_reg_sup, start_link, []},
-        permanent, 2000, supervisor, [dk_nii_reg_sup]}]}}.
+    {ok, {{one_for_one, 5, 10},
+          [child_spec(N) || N <- lists:seq(0, ?SIZE - 1)]}}.
+
+%%----------------------------------------------------------------------------
+%% Internal functions
+%%----------------------------------------------------------------------------
+
+child_spec(N) ->
+    Name = dk_nii_reg:name(N),
+    Mod = dk_nii_reg,
+    {Name, {Mod, start_link, [Name]}, permanent, 2000, worker, [Mod]}.
 
 %% Local variables:
 %% mode: erlang
