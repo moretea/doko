@@ -1,9 +1,10 @@
--module(dk_nii).
+%% @private
+-module(dk_nii_term).
 
 -behaviour(gen_server).
 
 %% API
--export([add_post/2, posts/1]).
+-export([add_doc_id/2]).
 -export([start_link/0]).
 
 %% gen_server callbacks
@@ -12,20 +13,15 @@
 
 -define(SERVER, ?MODULE).
 
--record(state, {}).
-
 %%----------------------------------------------------------------------------
 %% API
 %%----------------------------------------------------------------------------
 
-add_post(Term, DocId) ->
-    gen_server:cast(?SERVER, {add, Term, DocId}).
-
-posts(Term) ->
-    gen_server:call(?SERVER, {get, Term}).
+add_doc_id(Server, DocId) ->
+    gen_server:cast(Server, {add, DocId}).
 
 start_link() ->
-    gen_server:start_link({local, ?SERVER}, ?MODULE, [], []).
+    gen_server:start_link(?MODULE, [], []).
 
 %%----------------------------------------------------------------------------
 %% gen_server callbacks
@@ -33,22 +29,20 @@ start_link() ->
 
 %% @private
 init([]) ->
-    {ok, #state{}}.
+    {ok, gb_sets:new()}.
 
 %% @private
-handle_call({get, Term}, From, State) ->
-    Server = dk_nii_reg:pid(Term),
-    gen_server:cast(Server, {get, From}),
-    {noreply, State};
 handle_call(_Request, _From, State) ->
     Reply = ok,
     {reply, Reply, State}.
 
 %% @private
-handle_cast({add, Term, DocId}, State) ->
-    Server = dk_nii_reg:pid(Term),
-    dk_nii_term:add_doc_id(Server, DocId),
+handle_cast({get, From}, Set = State) ->
+    gen_server:reply(From, Set),
     {noreply, State};
+handle_cast({add, DocId}, Set = _State) ->
+    NextState = gb_sets:insert(DocId, Set),
+    {noreply, NextState};
 handle_cast(_Msg, State) ->
     {noreply, State}.
 

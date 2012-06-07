@@ -1,5 +1,5 @@
 %% @private
--module(dk_nii_sup).
+-module(dk_nii_term_sup).
 
 -behaviour(supervisor).
 
@@ -21,14 +21,9 @@ start_link() ->
 %%----------------------------------------------------------------------------
 
 init([]) ->
-    {ok,
-     {{one_for_one, 5, 10},
-      [{dk_nii, {dk_nii, start_link, []},
-        permanent, 2000, worker, [dk_nii]},
-       {dk_nii_term_sup, {dk_nii_term_sup, start_link, []},
-        permanent, 2000, supervisor, [dk_nii_term_sup]},
-       {dk_nii_reg_sup, {dk_nii_reg_sup, start_link, []},
-        permanent, 2000, supervisor, [dk_nii_reg_sup]}]}}.
+    {ok, {{simple_one_for_one, 0, 1},
+          [{dk_nii_term, {dk_nii_term, start_link, []},
+            temporary, brutal_kill, worker, [dk_nii_term]}]}}.
 
 %% Local variables:
 %% mode: erlang
