@@ -31,12 +31,12 @@ posts_list(Binary) ->
     posts_list(Binary, []).
 
 posts_list(<<>>, Acc) ->
-    Acc;
+    lists:flatten(Acc);
 posts_list(Binary, Acc) ->
     [Line, Rest] = binary:split(Binary, <<"\n">>), %% does this work correctly with UTF-8?
     [Id, Text] = binary:split(Line, <<" ">>),
-    _Terms = dk_pp:terms(Text, "en"),
-    posts_list(Rest, [Id | Acc]).
+    Posts = [{T, Id} || T <- dk_pp:terms(Text, "en")],
+    posts_list(Rest, [Posts | Acc]).
 
 %% @private
 '_add_doc'(DomId, CatId, DocId, Doc) ->
