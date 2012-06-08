@@ -1,6 +1,6 @@
 %% @private
--module(dk_nii_reg_sup).
--include("dk_nii.hrl").
+-module(dk_idx_reg_sup).
+-include("dk_idx.hrl").
 
 -behaviour(supervisor).
 
@@ -30,8 +30,8 @@ init([]) ->
 %%----------------------------------------------------------------------------
 
 child_spec(N) ->
-    Name = dk_nii_reg:name(N),
-    Mod = dk_nii_reg,
+    Name = dk_idx_reg:name(N),
+    Mod = dk_idx_reg,
     {Name, {Mod, start_link, [Name]}, permanent, 2000, worker, [Mod]}.
 
 %% Local variables:

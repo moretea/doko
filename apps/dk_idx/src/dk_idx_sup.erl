@@ -1,5 +1,5 @@
 %% @private
--module(dk_nii_sup).
+-module(dk_idx_sup).
 
 -behaviour(supervisor).
 
@@ -24,8 +24,8 @@ start_link() ->
 %%----------------------------------------------------------------------------
 
 init([]) ->
-    {ok, {{one_for_one, 5, 10}, [?CHILD(dk_nii_reg_sup, supervisor),
-                                 ?CHILD(dk_nii_term_sup, supervisor)]}}.
+    {ok, {{one_for_one, 5, 10}, [?CHILD(dk_idx_reg_sup, supervisor),
+                                 ?CHILD(dk_idx_term_sup, supervisor)]}}.
 
 %% Local variables:
 %% mode: erlang

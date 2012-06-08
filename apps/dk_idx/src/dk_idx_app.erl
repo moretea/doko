@@ -1,17 +1,20 @@
--module(dk_nii).
+%% @private
+-module(dk_idx_app).
 
-%% API
--export([add_doc_id/2, doc_ids/1]).
+-behaviour(application).
+
+%% application callbacks
+-export([start/2, stop/1]).
 
 %%----------------------------------------------------------------------------
-%% API
+%% application callbacks
 %%----------------------------------------------------------------------------
 
-add_doc_id(Term, DocId) ->
-    dk_nii_term:add_doc_id(dk_nii_reg:server(Term), DocId).
+start(_StartType, _StartArgs) ->
+    dk_idx_sup:start_link().
 
-doc_ids(Term) ->
-    dk_nii_term:doc_ids(dk_nii_reg:server(Term)).
+stop(_State) ->
+    ok.
 
 %% Local variables:
 %% mode: erlang

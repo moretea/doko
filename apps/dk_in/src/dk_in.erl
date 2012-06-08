@@ -23,7 +23,7 @@ add_doc(Binary) ->
     [Id, Text] = binary:split(Line, <<" ">>),
     %% io:format("doc ~p~n", [Id]),
     IntId = list_to_integer(binary_to_list(Id)),
-    plists:foreach(fun (T) -> dk_nii:add_doc_id(T, IntId) end, dk_pp:terms(Text, "en")),
+    plists:foreach(fun (T) -> dk_idx:add_doc_id(T, IntId) end, dk_pp:terms(Text, "en")),
     add_doc(Rest).
 
 %% Local variables:
