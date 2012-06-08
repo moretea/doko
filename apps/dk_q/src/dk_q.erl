@@ -1,13 +1,14 @@
 -module(dk_q).
 
 %% API
--export([exec/3]).
+%% -export([exec/3]).
+-compile(export_all).
 
 %% Record declarations
 -record(and_q, {subs}).
 -record(or_q, {subs}).
 -record(not_q, {sub}).
--record(kw_q, {kw}).
+-record(term_q, {term}).
 
 %%----------------------------------------------------------------------------
 %% API
@@ -24,6 +25,39 @@ exec(DomId, CatId, QueryStr) ->
 from_str(Str, Lang) ->
     {ok, ParseTree} = dk_q_parser:parse(scan(Str)),
     tree_to_query(ParseTree, Lang).
+
+dnf(Q = {term_q, _}) ->
+    Q;
+dnf(Q = {not_q, {term_q, _}}) ->
+    Q;
+dnf({not_q, {not_q, Q}}) ->
+    dnf(Q);
+dnf({not_q, {or_q, Qs}}) ->
+    dnf({and_q, [{not_q, dnf(Q)} || Q <- Qs]});
+dnf({not_q, {and_q, Qs}}) ->
+    {or_q, [{not_q, dnf(Q)} || Q <- Qs]};
+dnf({or_q, SubQs}) ->
+    {or_q, [dnf(Q) || Q <- SubQs]};
+dnf({and_q, SubQs}) ->
+    Fun = fun(X) -> case X of
+                        {term_q, _} -> [X];
+                        {not_q, _} -> [X];
+                        {or_q, Ys} -> Ys
+                    end
+          end,
+    Xs = product([Fun(dnf(Q)) || Q <- SubQs]),
+    %% io:format("~p~n", [Xs]),
+    {or_q, [{and_q, X} || X <- Xs]}.
+
+product([Xs, Ys | Rest]) ->
+    product(Rest, [[X, Y] || X <- Xs, Y <- Ys]).
+
+product([], Acc) ->
+    Acc;
+product([L], Acc) ->
+    [[X | Y] || X <- L, Y <- Acc];
+product([L | Rest], Acc) ->
+    product(Rest, [[X | Y] || X <- L, Y <- Acc]).
 
 scan(<<C/utf8, Rest/bytes>>) ->
     case C of
@@ -55,12 +89,12 @@ tree_to_query({or_q, SubTreeL, SubTreeR}, Lang) ->
                   tree_to_query(SubTreeR, Lang)]};
 tree_to_query({not_q, SubTree}, Lang) ->
     #not_q{sub = tree_to_query(SubTree, Lang)};
-tree_to_query({kw_q, {string, Keyword, _}}, Lang) ->
+tree_to_query({term_q, {string, Keyword, _}}, Lang) ->
     [Term | _] = dk_pp:terms(Keyword, Lang),
-    #kw_q{kw = Term}.
+    #term_q{term = Term}.
 
-exec_q(DomId, CatId, #kw_q{kw = Kw}) ->
-    get_posts(DomId, CatId, Kw);
+exec_q(DomId, CatId, #term_q{term = Term}) ->
+    get_posts(DomId, CatId, Term);
 exec_q(DomId, CatId, #and_q{subs = Subs}) ->
     sets:intersection([exec_q(DomId, CatId, Sub) || Sub <- Subs]);
 exec_q(DomId, CatId, #or_q{subs = Subs}) ->
