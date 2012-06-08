@@ -5,7 +5,7 @@
 -behaviour(gen_server).
 
 %% API
--export([pid/1]).
+-export([server/1]).
 -export([name/1]).
 -export([start_link/1]).
 
@@ -17,8 +17,8 @@
 %% API
 %%----------------------------------------------------------------------------
 
-pid(Term) ->
-    gen_server:call(name(erlang:phash2(Term, ?SIZE)), {pid, Term}).
+server(Term) ->
+    gen_server:call(name(erlang:phash2(Term, ?SIZE)), {server, Term}).
 
 name(N) ->
     list_to_atom(?MODULE_STRING ++ "[" ++ integer_to_list(N) ++ "]").
@@ -36,16 +36,16 @@ init([]) ->
     {ok, dict:new()}.
 
 %% @private
-handle_call({pid, Term}, _From, Dict = State) ->
-    {Pid, NextState} =
+handle_call({server, Term}, _From, Dict = State) ->
+    {Server, NextState} =
         case dict:find(Term, Dict) of
             {ok, Value} ->
                 {Value, State};
             error ->
-                {ok, NewPid} = supervisor:start_child(dk_nii_term_sup, []),
-                {NewPid, dict:store(Term, NewPid, Dict)}
+                {ok, NewServer} = supervisor:start_child(dk_nii_term_sup, []),
+                {NewServer, dict:store(Term, NewServer, Dict)}
         end,
-    {reply, Pid, NextState};
+    {reply, Server, NextState};
 handle_call(_Request, _From, State) ->
     Reply = ok,
     {reply, Reply, State}.
@@ -65,10 +65,6 @@ terminate(_Reason, _State) ->
 %% @private
 code_change(_OldVsn, State, _Extra) ->
     {ok, State}.
-
-%%----------------------------------------------------------------------------
-%% Internal functions
-%%----------------------------------------------------------------------------
 
 %% Local variables:
 %% mode: erlang

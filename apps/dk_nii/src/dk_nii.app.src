@@ -1,9 +1,9 @@
 %% -*- mode: erlang; fill-column: 78; -*-
 
 {application, dk_nii,
- [{description, "New Inverted Index"},
+ [{description, "Inverted Index"},
   {vsn, "0.1"},
-  {registered, []},
+  {registered, [dk_nii_sup, dk_nii_reg_sup, dk_nii_term_sup]},
   {applications, [kernel, stdlib]},
   {mod, {dk_nii_app, []}} ,
   {env, []}]}.

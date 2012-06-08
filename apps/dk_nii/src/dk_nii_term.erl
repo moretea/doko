@@ -4,7 +4,7 @@
 -behaviour(gen_server).
 
 %% API
--export([add_doc_id/2]).
+-export([add_doc_id/2, doc_ids/1]).
 -export([start_link/0]).
 
 %% gen_server callbacks
@@ -20,6 +20,9 @@
 add_doc_id(Server, DocId) ->
     gen_server:cast(Server, {add, DocId}).
 
+doc_ids(Server) ->
+    gen_server:call(Server, get).
+
 start_link() ->
     gen_server:start_link(?MODULE, [], []).
 
@@ -32,14 +35,13 @@ init([]) ->
     {ok, gb_sets:new()}.
 
 %% @private
-handle_call(_Request, _From, State) ->
+handle_call(get, _Client, Set = State) ->
+    {reply, Set, State};
+handle_call(_Request, _Client, State) ->
     Reply = ok,
     {reply, Reply, State}.
 
 %% @private
-handle_cast({get, From}, Set = State) ->
-    gen_server:reply(From, Set),
-    {noreply, State};
 handle_cast({add, DocId}, Set = _State) ->
     NextState = gb_sets:insert(DocId, Set),
     {noreply, NextState};
@@ -57,10 +59,6 @@ terminate(_Reason, _State) ->
 %% @private
 code_change(_OldVsn, State, _Extra) ->
     {ok, State}.
-
-%%----------------------------------------------------------------------------
-%% Internal functions
-%%----------------------------------------------------------------------------
 
 %% Local variables:
 %% mode: erlang

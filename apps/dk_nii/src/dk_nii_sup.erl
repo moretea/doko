@@ -9,6 +9,9 @@
 %% supervisor callbacks
 -export([init/1]).
 
+%% Helper macro for declaring children of supervisor
+-define(CHILD(I, Type), {I, {I, start_link, []}, permanent, 2000, Type, [I]}).
+
 %%----------------------------------------------------------------------------
 %% API
 %%----------------------------------------------------------------------------
@@ -21,14 +24,8 @@ start_link() ->
 %%----------------------------------------------------------------------------
 
 init([]) ->
-    {ok,
-     {{one_for_one, 5, 10},
-      [{dk_nii, {dk_nii, start_link, []},
-        permanent, 2000, worker, [dk_nii]},
-       {dk_nii_term_sup, {dk_nii_term_sup, start_link, []},
-        permanent, 2000, supervisor, [dk_nii_term_sup]},
-       {dk_nii_reg_sup, {dk_nii_reg_sup, start_link, []},
-        permanent, 2000, supervisor, [dk_nii_reg_sup]}]}}.
+    {ok, {{one_for_one, 5, 10}, [?CHILD(dk_nii_reg_sup, supervisor),
+                                 ?CHILD(dk_nii_term_sup, supervisor)]}}.
 
 %% Local variables:
 %% mode: erlang
