@@ -1,5 +1,6 @@
 %% @private
--module(dk_sup).
+-module(dk_nii_reg_sup).
+-include("dk_nii.hrl").
 
 -behaviour(supervisor).
 
@@ -8,9 +9,6 @@
 
 %% supervisor callbacks
 -export([init/1]).
-
-%% Helper macro for declaring children of supervisor
--define(CHILD(I, Type), {I, {I, start_link, []}, permanent, 5000, Type, [I]}).
 
 %%----------------------------------------------------------------------------
 %% API
@@ -24,10 +22,17 @@ start_link() ->
 %%----------------------------------------------------------------------------
 
 init([]) ->
-    {ok, {{one_for_one, 5, 10}, [?CHILD(dk_ii_sup, supervisor),
-                                 ?CHILD(dk_meta_sup, supervisor),
-                                 ?CHILD(dk_nii_sup, supervisor),
-                                 ?CHILD(dk_ring_sup, supervisor)]}}.
+    {ok, {{one_for_one, 5, 10},
+          [child_spec(N) || N <- lists:seq(0, ?SIZE - 1)]}}.
+
+%%----------------------------------------------------------------------------
+%% Internal functions
+%%----------------------------------------------------------------------------
+
+child_spec(N) ->
+    Name = dk_nii_reg:name(N),
+    Mod = dk_nii_reg,
+    {Name, {Mod, start_link, [Name]}, permanent, 2000, worker, [Mod]}.
 
 %% Local variables:
 %% mode: erlang

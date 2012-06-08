@@ -11,9 +11,12 @@
 %% @doc Returns a list of terms.
 -spec terms(utf8_string(), iso_639_1()) -> [utf8_string()].
 terms(Str, Lang) ->
-    [(list_to_atom("dk_stem_" ++ Lang)):stem(Token)
-     || Token <- tokenize(dk_utf8:case_fold(Str), Lang),
-        not(stop_word(Token, Lang))].
+    plists:usort(
+      plists:map(
+        fun (T) -> (list_to_atom("dk_stem_" ++ Lang)):stem(T) end,
+        plists:usort(
+          [T || T <- tokenize(dk_utf8:case_fold(Str), Lang),
+                not(stop_word(T, Lang))]))).
 
 %%----------------------------------------------------------------------------
 %% Internal functions

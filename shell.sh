@@ -1,3 +1,3 @@
 #!/bin/sh
 
-erl -pa `pwd`/apps/*/ebin +c -run reloader
+erl +P 134217727 -pa `pwd`/apps/*/ebin -pa `pwd`/deps/*/ebin +c -run reloader

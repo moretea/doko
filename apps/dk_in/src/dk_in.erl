@@ -1,54 +1,30 @@
 -module(dk_in).
 
 %% API
--export([add_doc/4]).
-
-%% For internal use only
--export(['_add_doc'/4]).
+-export([test/1]).
 
 %%----------------------------------------------------------------------------
 %% API
 %%----------------------------------------------------------------------------
 
-%% @doc Adds a document.
-add_doc(DomId, CatId, DocId, Doc) ->
-    spawn(?MODULE, '_add_doc', [DomId, CatId, DocId, Doc]),
+test(File) ->
+    {ok, Binary} = file:read_file(File),
+    add_doc(Binary),
     ok.
 
 %%----------------------------------------------------------------------------
 %% Internal functions
 %%----------------------------------------------------------------------------
 
-%% @private
-'_add_doc'(DomId, CatId, DocId, Doc) ->
-    {ok, Lang} = dk_meta:dom_lang(DomId),
-    lists:foreach(
-      fun (Term) -> add_post(DomId, CatId, DocId, Term) end,
-      lists:usort(dk_pp:terms(Doc, Lang))),
-    add_doc_id(DomId, CatId, DocId),
-    ok.
-
-add_post(DomId, CatId, DocId, Term) ->
-    Nodes = dk_ring:whereis({invix_data, {DomId, CatId, Term}}),
-    %% TO-DO:
-    %% - choose timeout value
-    %% - handle "bad" nodes
-    Timeout = infinity,
-    {_, []} = rpc:multicall(Nodes,
-                            dk_ii, add_post, [DomId, CatId, DocId, Term],
-                            Timeout),
-    ok.
-
-add_doc_id(DomId, CatId, DocId) ->
-    Nodes = dk_ring:whereis({cat_data, {DomId, CatId}}),
-    %% TO-DO:
-    %% - choose timeout value
-    %% - handle "bad" nodes
-    Timeout = infinity,
-    {_, []} = rpc:multicall(Nodes,
-                            dk_ii, add_doc_id, [DomId, CatId, DocId],
-                            Timeout),
-    ok.
+add_doc(<<>>) ->
+    ok;
+add_doc(Binary) ->
+    [Line, Rest] = binary:split(Binary, <<"\n">>), %% does this work correctly with UTF-8?
+    [Id, Text] = binary:split(Line, <<" ">>),
+    %% io:format("doc ~p~n", [Id]),
+    IntId = list_to_integer(binary_to_list(Id)),
+    plists:foreach(fun (T) -> dk_nii:add_doc_id(T, IntId) end, dk_pp:terms(Text, "en")),
+    add_doc(Rest).
 
 %% Local variables:
 %% mode: erlang
