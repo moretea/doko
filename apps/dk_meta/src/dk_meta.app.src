@@ -1,9 +1,0 @@
-%% -*- mode: erlang; fill-column: 78; -*-
-
-{application, dk_meta,
- [{description, "Metadata storage"},
-  {vsn, "0.1"},
-  {registered, []},
-  {applications, [kernel, stdlib]},
-  {mod, {dk_meta_app, []}},
-  {env, []}]}.
