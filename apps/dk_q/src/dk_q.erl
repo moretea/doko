@@ -24,7 +24,7 @@ exec(DomId, CatId, QueryStr) ->
 
 from_str(Str, Lang) ->
     {ok, ParseTree} = dk_q_parser:parse(scan(Str)),
-    tree_to_query(ParseTree, Lang).
+    flatten(tree_to_query(ParseTree, Lang)).
 
 dnf(Q = #term_q{}) ->
     Q;
@@ -91,6 +91,21 @@ tree_to_query({not_q, SubTree}, Lang) ->
 tree_to_query({term_q, {string, Keyword, _}}, Lang) ->
     [Term | _] = dk_pp:terms(Keyword, Lang),
     #term_q{term = Term}.
+
+flatten(Q = #term_q{}) ->
+    Q;
+flatten(Q = #not_q{}) ->
+    Q;
+flatten(#and_q{subs = Qs}) ->
+    {Ands, Rest} = lists:partition(fun (X) -> is_record(X, and_q) end,
+                                   [flatten(Q) || Q <- Qs]),
+    Fun = fun (#and_q{subs = Rs}) -> Rs end,
+    #and_q{subs = lists:flatten([Fun(Q) || Q <- Ands]) ++ Rest};
+flatten(#or_q{subs = Qs}) ->
+    {Ors, Rest} = lists:partition(fun (X) -> is_record(X, or_q) end,
+                                  [flatten(Q) || Q <- Qs]),
+    Fun = fun (#or_q{subs = Rs}) -> Rs end,
+    #or_q{subs = lists:flatten([Fun(Q) || Q <- Ors]) ++ Rest}.
 
 exec_q(DomId, CatId, #term_q{term = Term}) ->
     get_posts(DomId, CatId, Term);
