@@ -26,28 +26,27 @@ from_str(Str, Lang) ->
     {ok, ParseTree} = dk_q_parser:parse(scan(Str)),
     tree_to_query(ParseTree, Lang).
 
-dnf(Q = {term_q, _}) ->
+dnf(Q = #term_q{}) ->
     Q;
-dnf(Q = {not_q, {term_q, _}}) ->
+dnf(Q = #not_q{sub = #term_q{}}) ->
     Q;
-dnf({not_q, {not_q, Q}}) ->
+dnf(#not_q{sub = #not_q{sub = Q}}) ->
     dnf(Q);
-dnf({not_q, {or_q, Qs}}) ->
-    dnf({and_q, [{not_q, dnf(Q)} || Q <- Qs]});
-dnf({not_q, {and_q, Qs}}) ->
-    {or_q, [{not_q, dnf(Q)} || Q <- Qs]};
-dnf({or_q, SubQs}) ->
-    {or_q, [dnf(Q) || Q <- SubQs]};
-dnf({and_q, SubQs}) ->
-    Fun = fun(X) -> case X of
-                        {term_q, _} -> [X];
-                        {not_q, _} -> [X];
-                        {or_q, Ys} -> Ys
+dnf(#not_q{sub = #or_q{subs = Qs}}) ->
+    dnf(#and_q{subs = [#not_q{sub = dnf(Q)} || Q <- Qs]});
+dnf(#not_q{sub = #and_q{subs = Qs}}) ->
+    #or_q{subs = [#not_q{sub = dnf(Q)} || Q <- Qs]};
+dnf(#or_q{subs = Qs}) ->
+    #or_q{subs = [dnf(Q) || Q <- Qs]};
+dnf(#and_q{subs = Qs}) ->
+    Fun = fun(Q) -> case Q of
+                        #term_q{} -> [Q];
+                        #not_q{} -> [Q];
+                        #or_q{subs = Rs} -> Rs
                     end
           end,
-    Xs = product([Fun(dnf(Q)) || Q <- SubQs]),
-    %% io:format("~p~n", [Xs]),
-    {or_q, [{and_q, X} || X <- Xs]}.
+    Product = product([Fun(dnf(Q)) || Q <- Qs]),
+    #or_q{subs = [#and_q{subs = Rs} || Rs <- Product]}.
 
 product([Xs, Ys | Rest]) ->
     product(Rest, [[X, Y] || X <- Xs, Y <- Ys]).
