@@ -54,9 +54,9 @@ product([Xs, Ys | Rest]) ->
 product([], Acc) ->
     Acc;
 product([L], Acc) ->
-    [[X | Y] || X <- L, Y <- Acc];
+    [[H | T] || H <- L, T <- Acc];
 product([L | Rest], Acc) ->
-    product(Rest, [[X | Y] || X <- L, Y <- Acc]).
+    product(Rest, [[H | T] || H <- L, T <- Acc]).
 
 scan(<<C/utf8, Rest/bytes>>) ->
     case C of
