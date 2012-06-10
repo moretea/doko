@@ -59,10 +59,6 @@ tree_to_query({term_q, {string, Keyword, _}}, Lang) ->
             #term_q{term = Term}
     end.
 
-compress(Q = #term_q{}) ->
-    Q;
-compress(Q = #not_q{}) ->
-    Q;
 compress(#and_q{subs = Qs}) ->
     {Ands, Rest} = lists:partition(fun (X) -> is_record(X, and_q) end,
                                    [compress(Q) || Q <- Qs]),
@@ -70,19 +66,26 @@ compress(#and_q{subs = Qs}) ->
 compress(#or_q{subs = Qs}) ->
     {Ors, Rest} = lists:partition(fun (X) -> is_record(X, or_q) end,
                                   [compress(Q) || Q <- Qs]),
-    #or_q{subs = lists:flatten([subs(Q) || Q <- Ors]) ++ Rest}.
+    #or_q{subs = lists:flatten([subs(Q) || Q <- Ors]) ++ Rest};
+compress(Q = #not_q{}) ->
+    Q;
+compress(Q = #term_q{}) ->
+    Q.
 
-subs(Q = #term_q{}) ->
-    [Q];
-subs(Q = #not_q{}) ->
-    [Q];
+subs(#and_q{subs = Qs}) ->
+    Qs;
 subs(#or_q{subs = Qs}) ->
     Qs;
-subs(#and_q{subs = Qs}) ->
-    Qs.
+subs(Q = #not_q{}) ->
+    [Q];
+subs(Q = #term_q{}) ->
+    [Q].
 
-dnf(Q = #term_q{}) ->
-    Q;
+dnf(#and_q{subs = Qs}) ->
+    Product = product([subs(dnf(Q)) || Q <- Qs]),
+    #or_q{subs = [#and_q{subs = Rs} || Rs <- Product]};
+dnf(#or_q{subs = Qs}) ->
+    #or_q{subs = [dnf(Q) || Q <- Qs]};
 dnf(Q = #not_q{sub = #term_q{}}) ->
     Q;
 dnf(#not_q{sub = #not_q{sub = Q}}) ->
@@ -91,11 +94,8 @@ dnf(#not_q{sub = #or_q{subs = Qs}}) ->
     dnf(#and_q{subs = [#not_q{sub = dnf(Q)} || Q <- Qs]});
 dnf(#not_q{sub = #and_q{subs = Qs}}) ->
     #or_q{subs = [#not_q{sub = dnf(Q)} || Q <- Qs]};
-dnf(#or_q{subs = Qs}) ->
-    #or_q{subs = [dnf(Q) || Q <- Qs]};
-dnf(#and_q{subs = Qs}) ->
-    Product = product([subs(dnf(Q)) || Q <- Qs]),
-    #or_q{subs = [#and_q{subs = Rs} || Rs <- Product]}.
+dnf(Q = #term_q{}) ->
+    Q.
 
 product([Xs, Ys | Rest]) ->
     product(Rest, [[X, Y] || X <- Xs, Y <- Ys]).
