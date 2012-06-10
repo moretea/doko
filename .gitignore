@@ -11,3 +11,4 @@ erl_crash.dump
 /.DS_Store
 /data/
 /deps/
+/fprof.trace
