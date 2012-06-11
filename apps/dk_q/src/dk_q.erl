@@ -17,9 +17,10 @@
 %% Internal functions
 %%----------------------------------------------------------------------------
 
+%% convert string to query
 from_str(Str, Lang) ->
     {ok, ParseTree} = dk_q_parser:parse(scan(Str)),
-    compress(tree_to_query(ParseTree, Lang)).
+    tree_to_query(ParseTree, Lang).
 
 scan(<<C/utf8, Rest/bytes>>) ->
     case C of
@@ -29,7 +30,7 @@ scan(<<C/utf8, Rest/bytes>>) ->
         $| -> [{'|', 1} | scan(Rest)];
         $! -> [{'!', 1} | scan(Rest)];
         32 -> scan(Rest); % skip spaces
-        _ -> 
+        _ ->
             Regex = [<<"^([^()&|! ]*)(.*)$">>],
             Options = [unicode, global, {capture, all_but_first,
                                          binary}],
@@ -52,58 +53,67 @@ tree_to_query({or_q, SubTreeL, SubTreeR}, Lang) ->
 tree_to_query({not_q, SubTree}, Lang) ->
     #not_q{sub = tree_to_query(SubTree, Lang)};
 tree_to_query({term_q, {string, Keyword, _}}, Lang) ->
-    case dk_pp:terms(Keyword, Lang) of
-        [] ->
-            #or_q{subs = []};
-        [Term | _]  ->
-            #term_q{term = Term}
-    end.
+    [Term | _] = dk_pp:terms(Keyword, Lang),
+    #term_q{term = Term}.
 
-compress(#and_q{subs = Qs}) ->
-    {Ands, Rest} = lists:partition(fun (X) -> is_record(X, and_q) end,
-                                   [compress(Q) || Q <- Qs]),
-    #and_q{subs = lists:flatten([subs(Q) || Q <- Ands]) ++ Rest};
-compress(#or_q{subs = Qs}) ->
-    {Ors, Rest} = lists:partition(fun (X) -> is_record(X, or_q) end,
-                                  [compress(Q) || Q <- Qs]),
-    #or_q{subs = lists:flatten([subs(Q) || Q <- Ors]) ++ Rest};
-compress(Q = #not_q{}) ->
+%% rewrite query to DNF
+dnf(Q) ->
+    denest(distr_and(denest(mv_not_in(Q)))).
+
+mv_not_in(#and_q{subs = Qs}) ->
+    #and_q{subs = [mv_not_in(Q) || Q <- Qs]};
+mv_not_in(#or_q{subs = Qs}) ->
+    #or_q{subs = [mv_not_in(Q) || Q <- Qs]};
+mv_not_in(#not_q{sub = #and_q{subs = Qs}}) ->
+    #or_q{subs = [mv_not_in(#not_q{sub = Q}) || Q <- Qs]};
+mv_not_in(#not_q{sub = #or_q{subs = Qs}}) ->
+    #and_q{subs = [mv_not_in(#not_q{sub = Q}) || Q <- Qs]};
+mv_not_in(#not_q{sub = #not_q{sub = Q}}) ->
+    mv_not_in(Q);
+mv_not_in(Q = #not_q{sub = #term_q{}}) ->
     Q;
-compress(Q = #term_q{}) ->
+mv_not_in(Q = #term_q{}) ->
+    Q.
+
+denest(#and_q{subs = Qs}) ->
+    Rs = lists:flatten(lists:map(fun denest/1, Qs)),
+    {Ands, Rest} = lists:partition(fun (R) -> is_record(R, and_q) end, Rs),
+    #and_q{subs = lists:flatmap(fun subs/1, Ands) ++ Rest};
+denest(#or_q{subs = Qs}) ->
+    Rs = lists:map(fun denest/1, Qs),
+    {Ors, Rest} = lists:partition(fun (R) -> is_record(R, or_q) end, Rs),
+    #or_q{subs = lists:flatmap(fun subs/1, Ors) ++ Rest};
+denest(#not_q{sub = Q}) ->
+    #not_q{sub = denest(Q)};
+denest(Q = #term_q{}) ->
+    Q.
+
+distr_and(And = #and_q{subs = Qs}) ->
+    case lists:partition(fun (Q) -> is_record(Q, or_q) end, Qs) of
+        {[], _Rest} ->
+            And;
+        {Ors, Rest} ->
+            #or_q{subs = [distr_and(#and_q{subs = Rs})
+                          || Rs <- product([Q#or_q.subs || Q <-Ors],
+                                           [Rest])]}
+    end;
+distr_and(#or_q{subs = Qs}) ->
+    #or_q{subs = [distr_and(Q) || Q <- Qs]};
+distr_and(Q = #not_q{}) ->
+    Q;
+distr_and(Q = #term_q{}) ->
     Q.
 
 subs(#and_q{subs = Qs}) ->
     Qs;
 subs(#or_q{subs = Qs}) ->
-    Qs;
-subs(Q = #not_q{}) ->
-    [Q];
-subs(Q = #term_q{}) ->
-    [Q].
-
-dnf(#and_q{subs = Qs}) ->
-    Product = product([subs(dnf(Q)) || Q <- Qs]),
-    #or_q{subs = [#and_q{subs = Rs} || Rs <- Product]};
-dnf(#or_q{subs = Qs}) ->
-    #or_q{subs = [dnf(Q) || Q <- Qs]};
-dnf(Q = #not_q{sub = #term_q{}}) ->
-    Q;
-dnf(#not_q{sub = #not_q{sub = Q}}) ->
-    dnf(Q);
-dnf(#not_q{sub = #or_q{subs = Qs}}) ->
-    dnf(#and_q{subs = [#not_q{sub = dnf(Q)} || Q <- Qs]});
-dnf(#not_q{sub = #and_q{subs = Qs}}) ->
-    #or_q{subs = [#not_q{sub = dnf(Q)} || Q <- Qs]};
-dnf(Q = #term_q{}) ->
-    Q.
+    Qs.
 
 product([Xs, Ys | Rest]) ->
     product(Rest, [[X, Y] || X <- Xs, Y <- Ys]).
 
 product([], Acc) ->
     Acc;
-product([L], Acc) ->
-    [[H | T] || H <- L, T <- Acc];
 product([L | Rest], Acc) ->
     product(Rest, [[H | T] || H <- L, T <- Acc]).
 
