@@ -6,15 +6,15 @@
 -export([dnf/1]).
 
 %% Record declarations
--record(and_q, {subs :: [q(),...]}).
--record(or_q, {subs :: [q(),...]}).
--record(not_q, {sub :: q()}).
+-record(and_q,  {subs :: [q(),...]}).
+-record(or_q,   {subs :: [q(),...]}).
+-record(not_q,  {sub  :: q()}).
 -record(term_q, {term :: utf8_str()}).
 
 %% Type definitions
--type q() :: {and_q, [q(),...]} |
-             {or_q, [q(),...]} |
-             {not_q, q()} |
+-type q() :: {and_q,  [q(),...]} |
+             {or_q,   [q(),...]} |
+             {not_q,  q()}       |
              {term_q, utf8_str()}.
 -type utf8_str() :: unicode:unicode_binary().
 
