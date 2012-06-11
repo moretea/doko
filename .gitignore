@@ -2,6 +2,7 @@
 *.css
 *.html
 .#*
+/apps/*/.eunit/*
 /apps/*/doc/*
 !/apps/*/doc/overview.edoc
 /nonpublic/
