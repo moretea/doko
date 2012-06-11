@@ -1,4 +1,6 @@
 -module(dk_q).
+-include_lib("proper/include/proper.hrl").
+-include_lib("eunit/include/eunit.hrl").
 
 %% API
 -export([from_str/2]).
@@ -118,6 +120,15 @@ product([], Acc) ->
     Acc;
 product([L | Rest], Acc) ->
     product(Rest, [[H | T] || H <- L, T <- Acc]).
+
+%%----------------------------------------------------------------------------
+%% Tests
+%%----------------------------------------------------------------------------
+
+proper_test_() ->
+    [{atom_to_list(F),
+      fun () -> ?assert(proper:quickcheck(?MODULE:F(), [long_result])) end}
+     || {F, 0} <- ?MODULE:module_info(exports), F > 'prop_', F < 'prop`'].
 
 %% Local variables:
 %% mode: erlang
