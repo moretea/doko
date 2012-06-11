@@ -4,10 +4,14 @@
 -compile(export_all).
 
 %% Record declarations
--record(and_q, {subs}).
--record(or_q, {subs}).
--record(not_q, {sub}).
--record(term_q, {term}).
+-record(and_q, {subs :: [q(),...]}).
+-record(or_q, {subs :: [q(),...]}).
+-record(not_q, {sub :: q()}).
+-record(term_q, {term :: utf8_str()}).
+
+%% Type definitions
+-type q() :: #and_q{} | #or_q{} | #not_q{} | #term_q{}.
+-type utf8_str() :: unicode:unicode_binary().
 
 %%----------------------------------------------------------------------------
 %% API
