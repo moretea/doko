@@ -127,7 +127,7 @@ product([L | Rest], Acc) ->
 %% PropErties
 %%----------------------------------------------------------------------------
 
-prop_denested() ->
+prop_denest() ->
     ?FORALL(X, q(), not nested(denest(X))).
 
 nested(#and_q{subs = Qs}) ->
@@ -146,6 +146,20 @@ nested(#not_q{sub = Q}) ->
     nested(Q);
 nested(#term_q{}) ->
     false.
+
+prop_mv_not_in() ->
+    ?FORALL(X, q(), nots_elementary(mv_not_in(X))).
+
+nots_elementary(#and_q{subs = Qs}) ->
+    lists:all(fun nots_elementary/1, Qs);
+nots_elementary(#or_q{subs = Qs}) ->
+    lists:all(fun nots_elementary/1, Qs);
+nots_elementary(#not_q{sub = #term_q{}}) ->
+    true;
+nots_elementary(#not_q{}) ->
+    false;
+nots_elementary(#term_q{}) ->
+    true.
 
 %% Local variables:
 %% mode: erlang
