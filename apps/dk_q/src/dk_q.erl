@@ -161,7 +161,8 @@ nots_elementary(#term_q{}) ->
     true.
 
 prop_dnf() ->
-    ?FORALL(X, q(),
+    ?FORALL(X,
+            ?SUCHTHAT(X, q(), not single_subs(X)),
             case dnf(X) of
                 #and_q{subs = Qs} ->
                     lists:all(fun elementary/1, Qs);
@@ -184,6 +185,17 @@ elementary(#term_q{}) ->
 elementary(#not_q{}) ->
     true;
 elementary(_) ->
+    false.
+
+single_subs(#and_q{subs = Qs}) ->
+    length(Qs) == 1 orelse
+        lists:all(fun single_subs/1, [Q || Q <- Qs, not elementary(Q)]);
+single_subs(#or_q{subs = Qs}) ->
+    length(Qs) == 1 orelse 
+        lists:all(fun single_subs/1, [Q || Q <- Qs, not elementary(Q)]);
+single_subs(#not_q{sub = Q}) ->
+    single_subs(Q);
+single_subs(#term_q{}) ->
     false.
 
 %% Local variables:
