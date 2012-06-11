@@ -1,7 +1,8 @@
 -module(dk_q).
 
 %% API
--compile(export_all).
+-export([from_str/2]).
+-export([dnf/1]).
 
 %% Record declarations
 -record(and_q, {subs :: [q(),...]}).
@@ -17,14 +18,18 @@
 %% API
 %%----------------------------------------------------------------------------
 
-%%----------------------------------------------------------------------------
-%% Internal functions
-%%----------------------------------------------------------------------------
-
 %% convert string to query
 from_str(Str, Lang) ->
     {ok, ParseTree} = dk_q_parser:parse(scan(Str)),
     tree_to_query(ParseTree, Lang).
+
+%% rewrite query to DNF
+dnf(Q) ->
+    denest(distr_and(denest(mv_not_in(Q)))).
+
+%%----------------------------------------------------------------------------
+%% Internal functions
+%%----------------------------------------------------------------------------
 
 scan(<<C/utf8, Rest/bytes>>) ->
     case C of
@@ -59,10 +64,6 @@ tree_to_query({not_q, SubTree}, Lang) ->
 tree_to_query({term_q, {string, Keyword, _}}, Lang) ->
     [Term | _] = dk_pp:terms(Keyword, Lang),
     #term_q{term = Term}.
-
-%% rewrite query to DNF
-dnf(Q) ->
-    denest(distr_and(denest(mv_not_in(Q)))).
 
 mv_not_in(#and_q{subs = Qs}) ->
     #and_q{subs = [mv_not_in(Q) || Q <- Qs]};
