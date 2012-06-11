@@ -126,7 +126,7 @@ product([L|Rest], Acc) ->
 %% PropErties
 %%----------------------------------------------------------------------------
 
-prop_denest() ->
+prop_not_nested() ->
     ?FORALL(X, q(), not nested(denest(X))).
 
 nested(#and_q{subs = Qs}) ->
