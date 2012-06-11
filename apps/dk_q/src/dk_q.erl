@@ -1,6 +1,5 @@
 -module(dk_q).
 -include_lib("proper/include/proper.hrl").
--include_lib("eunit/include/eunit.hrl").
 
 %% API
 -export([from_str/2]).
@@ -13,7 +12,10 @@
 -record(term_q, {term :: utf8_str()}).
 
 %% Type definitions
--type q() :: #and_q{} | #or_q{} | #not_q{} | #term_q{}.
+-type q() :: {and_q, [q(),...]} |
+             {or_q, [q(),...]} |
+             {not_q, q()} |
+             {term_q, utf8_str()}.
 -type utf8_str() :: unicode:unicode_binary().
 
 %%----------------------------------------------------------------------------
@@ -122,13 +124,28 @@ product([L | Rest], Acc) ->
     product(Rest, [[H | T] || H <- L, T <- Acc]).
 
 %%----------------------------------------------------------------------------
-%% Tests
+%% PropErties
 %%----------------------------------------------------------------------------
 
-proper_test_() ->
-    [{atom_to_list(F),
-      fun () -> ?assert(proper:quickcheck(?MODULE:F(), [long_result])) end}
-     || {F, 0} <- ?MODULE:module_info(exports), F > 'prop_', F < 'prop`'].
+prop_denested() ->
+    ?FORALL(X, q(), not nested(denest(X))).
+
+nested(#and_q{subs = Qs}) ->
+    case lists:partition(fun (Q) -> is_record(Q, and_q) end, Qs) of
+        {[], _} -> lists:any(fun nested/1, Qs);
+        _ -> true
+    end;
+nested(#or_q{subs = Qs}) ->
+    case lists:partition(fun (Q) -> is_record(Q, or_q) end, Qs) of
+        {[], _} -> lists:any(fun nested/1, Qs);
+        _ -> true
+    end;
+nested(#not_q{sub = #term_q{}}) ->
+    false;
+nested(#not_q{sub = Q}) ->
+    nested(Q);
+nested(#term_q{}) ->
+    false.
 
 %% Local variables:
 %% mode: erlang
