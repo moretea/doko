@@ -146,7 +146,7 @@ nested(#not_q{sub = Q}) ->
 nested(#term_q{}) ->
     false.
 
-prop_mv_not_in() ->
+prop_all_nots_elementary() ->
     ?FORALL(X, q(), nots_elementary(mv_not_in(X))).
 
 nots_elementary(#and_q{subs = Qs}) ->
