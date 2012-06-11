@@ -113,9 +113,6 @@ subs(#and_q{subs = Qs}) ->
 subs(#or_q{subs = Qs}) ->
     Qs.
 
-product([Xs, Ys | Rest]) ->
-    product(Rest, [[X, Y] || X <- Xs, Y <- Ys]).
-
 product([], Acc) ->
     Acc;
 product([L | Rest], Acc) ->
