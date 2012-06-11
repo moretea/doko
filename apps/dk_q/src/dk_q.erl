@@ -37,11 +37,11 @@ dnf(Q) ->
 
 scan(<<C/utf8, Rest/bytes>>) ->
     case C of
-        $( -> [{'(', 1} | scan(Rest)];
-        $) -> [{')', 1} | scan(Rest)];
-        $& -> [{'&', 1} | scan(Rest)];
-        $| -> [{'|', 1} | scan(Rest)];
-        $! -> [{'!', 1} | scan(Rest)];
+        $( -> [{'(', 1}|scan(Rest)];
+        $) -> [{')', 1}|scan(Rest)];
+        $& -> [{'&', 1}|scan(Rest)];
+        $| -> [{'|', 1}|scan(Rest)];
+        $! -> [{'!', 1}|scan(Rest)];
         32 -> scan(Rest); % skip spaces
         _  ->
             Regex = [<<"^([^()&|! ]*)(.*)$">>],
@@ -49,9 +49,9 @@ scan(<<C/utf8, Rest/bytes>>) ->
                                          binary}],
             case re:run(Rest, Regex, Options) of
                 {match, [[Str, RestRest]]} ->
-                    [{string, <<C, Str/bytes>>, 1} | scan(RestRest)];
+                    [{string, <<C, Str/bytes>>, 1}|scan(RestRest)];
                 _ ->
-                    [{string, <<C>>, 1} | scan(Rest)]
+                    [{string, <<C>>, 1}|scan(Rest)]
             end
     end;
 scan(<<>>) ->
@@ -66,7 +66,7 @@ tree_to_query({or_q, SubTreeL, SubTreeR}, Lang) ->
 tree_to_query({not_q, SubTree}, Lang) ->
     #not_q{sub = tree_to_query(SubTree, Lang)};
 tree_to_query({term_q, {string, Keyword, _}}, Lang) ->
-    [Term | _] = dk_pp:terms(Keyword, Lang),
+    [Term|_] = dk_pp:terms(Keyword, Lang),
     #term_q{term = Term}.
 
 mv_not_in(#and_q{subs = Qs}) ->
@@ -120,8 +120,8 @@ subs(#or_q{subs = Qs}) ->
 
 product([], Acc) ->
     Acc;
-product([L | Rest], Acc) ->
-    product(Rest, [[H | T] || H <- L, T <- Acc]).
+product([L|Rest], Acc) ->
+    product(Rest, [[H|T] || H <- L, T <- Acc]).
 
 %%----------------------------------------------------------------------------
 %% PropErties
