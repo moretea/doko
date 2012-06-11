@@ -24,7 +24,7 @@
 
 %% convert string to query
 from_str(Str, Lang) ->
-    {ok, ParseTree} = dk_q_parser:parse(scan(Str)),
+    {ok,ParseTree} = dk_q_parser:parse(scan(Str)),
     tree_to_query(ParseTree, Lang).
 
 %% rewrite query to DNF
@@ -35,37 +35,36 @@ dnf(Q) ->
 %% Internal functions
 %%----------------------------------------------------------------------------
 
-scan(<<C/utf8, Rest/bytes>>) ->
+scan(<<C/utf8,Rest/bytes>>) ->
     case C of
-        $( -> [{'(', 1}|scan(Rest)];
-        $) -> [{')', 1}|scan(Rest)];
-        $& -> [{'&', 1}|scan(Rest)];
-        $| -> [{'|', 1}|scan(Rest)];
-        $! -> [{'!', 1}|scan(Rest)];
+        $( -> [{'(',1}|scan(Rest)];
+        $) -> [{')',1}|scan(Rest)];
+        $& -> [{'&',1}|scan(Rest)];
+        $| -> [{'|',1}|scan(Rest)];
+        $! -> [{'!',1}|scan(Rest)];
         32 -> scan(Rest); % skip spaces
         _  ->
             Regex = [<<"^([^()&|! ]*)(.*)$">>],
-            Options = [unicode, global, {capture, all_but_first,
-                                         binary}],
+            Options = [unicode,global,{capture,all_but_first,binary}],
             case re:run(Rest, Regex, Options) of
-                {match, [[Str, RestRest]]} ->
-                    [{string, <<C, Str/bytes>>, 1}|scan(RestRest)];
+                {match,[[Str,RestRest]]} ->
+                    [{string,<<C,Str/bytes>>,1}|scan(RestRest)];
                 _ ->
-                    [{string, <<C>>, 1}|scan(Rest)]
+                    [{string,<<C>>,1}|scan(Rest)]
             end
     end;
 scan(<<>>) ->
-    [{'$end', 1}].
+    [{'$end',1}].
 
-tree_to_query({and_q, SubTreeL, SubTreeR}, Lang) ->
+tree_to_query({and_q,SubTreeL,SubTreeR}, Lang) ->
     #and_q{subs = [tree_to_query(SubTreeL, Lang),
                    tree_to_query(SubTreeR, Lang)]};
-tree_to_query({or_q, SubTreeL, SubTreeR}, Lang) ->
+tree_to_query({or_q,SubTreeL,SubTreeR}, Lang) ->
     #or_q{subs = [tree_to_query(SubTreeL, Lang),
                   tree_to_query(SubTreeR, Lang)]};
-tree_to_query({not_q, SubTree}, Lang) ->
+tree_to_query({not_q,SubTree},Lang) ->
     #not_q{sub = tree_to_query(SubTree, Lang)};
-tree_to_query({term_q, {string, Keyword, _}}, Lang) ->
+tree_to_query({term_q,{string,Keyword,_}}, Lang) ->
     [Term|_] = dk_pp:terms(Keyword, Lang),
     #term_q{term = Term}.
 
@@ -86,11 +85,11 @@ mv_not_in(Q = #term_q{}) ->
 
 denest(#and_q{subs = Qs}) ->
     Rs = lists:flatten(lists:map(fun denest/1, Qs)),
-    {Ands, Rest} = lists:partition(fun (R) -> is_record(R, and_q) end, Rs),
+    {Ands,Rest} = lists:partition(fun (R) -> is_record(R, and_q) end, Rs),
     #and_q{subs = lists:flatmap(fun subs/1, Ands) ++ Rest};
 denest(#or_q{subs = Qs}) ->
     Rs = lists:map(fun denest/1, Qs),
-    {Ors, Rest} = lists:partition(fun (R) -> is_record(R, or_q) end, Rs),
+    {Ors,Rest} = lists:partition(fun (R) -> is_record(R, or_q) end, Rs),
     #or_q{subs = lists:flatmap(fun subs/1, Ors) ++ Rest};
 denest(#not_q{sub = Q}) ->
     #not_q{sub = denest(Q)};
@@ -99,9 +98,9 @@ denest(Q = #term_q{}) ->
 
 distr_and(And = #and_q{subs = Qs}) ->
     case lists:partition(fun (Q) -> is_record(Q, or_q) end, Qs) of
-        {[], _Rest} ->
+        {[],_Rest} ->
             And;
-        {Ors, Rest} ->
+        {Ors,Rest} ->
             #or_q{subs = [distr_and(#and_q{subs = Rs})
                           || Rs <- product([Q#or_q.subs || Q <-Ors],
                                            [Rest])]}
@@ -132,13 +131,13 @@ prop_denest() ->
 
 nested(#and_q{subs = Qs}) ->
     case lists:partition(fun (Q) -> is_record(Q, and_q) end, Qs) of
-        {[], _} -> lists:any(fun nested/1, Qs);
-        _       -> true
+        {[],_} -> lists:any(fun nested/1, Qs);
+        _      -> true
     end;
 nested(#or_q{subs = Qs}) ->
     case lists:partition(fun (Q) -> is_record(Q, or_q) end, Qs) of
-        {[], _} -> lists:any(fun nested/1, Qs);
-        _       -> true
+        {[],_} -> lists:any(fun nested/1, Qs);
+        _      -> true
     end;
 nested(#not_q{sub = #term_q{}}) ->
     false;
