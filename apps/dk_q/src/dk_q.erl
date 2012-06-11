@@ -43,7 +43,7 @@ scan(<<C/utf8, Rest/bytes>>) ->
         $| -> [{'|', 1} | scan(Rest)];
         $! -> [{'!', 1} | scan(Rest)];
         32 -> scan(Rest); % skip spaces
-        _ ->
+        _  ->
             Regex = [<<"^([^()&|! ]*)(.*)$">>],
             Options = [unicode, global, {capture, all_but_first,
                                          binary}],
@@ -133,12 +133,12 @@ prop_denest() ->
 nested(#and_q{subs = Qs}) ->
     case lists:partition(fun (Q) -> is_record(Q, and_q) end, Qs) of
         {[], _} -> lists:any(fun nested/1, Qs);
-        _ -> true
+        _       -> true
     end;
 nested(#or_q{subs = Qs}) ->
     case lists:partition(fun (Q) -> is_record(Q, or_q) end, Qs) of
         {[], _} -> lists:any(fun nested/1, Qs);
-        _ -> true
+        _       -> true
     end;
 nested(#not_q{sub = #term_q{}}) ->
     false;
