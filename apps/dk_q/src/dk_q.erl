@@ -160,6 +160,32 @@ nots_elementary(#not_q{}) ->
 nots_elementary(#term_q{}) ->
     true.
 
+prop_dnf() ->
+    ?FORALL(X, q(),
+            case dnf(X) of
+                #and_q{subs = Qs} ->
+                    lists:all(fun elementary/1, Qs);
+                #or_q{subs = Qs}  ->
+                    Fun1 = fun (Q) -> is_record(Q, and_q) end,
+                    {Ands,Rest} = lists:partition(Fun1, Qs),
+                    Fun2 = fun (#and_q{subs = Rs}) ->
+                                   lists:all(fun elementary/1, Rs)
+                           end,
+                    lists:all(Fun2, Ands) and
+                        lists:all(fun elementary/1, Rest);
+                #not_q{} ->
+                    true;
+                #term_q{} ->
+                    true
+            end).
+
+elementary(#term_q{}) ->
+    true;
+elementary(#not_q{}) ->
+    true;
+elementary(_) ->
+    false.
+
 %% Local variables:
 %% mode: erlang
 %% fill-column: 78
