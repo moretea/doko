@@ -189,10 +189,10 @@ elementary(_) ->
 
 single_subs(#and_q{subs = Qs}) ->
     length(Qs) == 1 orelse
-        lists:all(fun single_subs/1, [Q || Q <- Qs, not elementary(Q)]);
+        lists:any(fun single_subs/1, [Q || Q <- Qs, not elementary(Q)]);
 single_subs(#or_q{subs = Qs}) ->
     length(Qs) == 1 orelse 
-        lists:all(fun single_subs/1, [Q || Q <- Qs, not elementary(Q)]);
+        lists:any(fun single_subs/1, [Q || Q <- Qs, not elementary(Q)]);
 single_subs(#not_q{sub = Q}) ->
     single_subs(Q);
 single_subs(#term_q{}) ->
