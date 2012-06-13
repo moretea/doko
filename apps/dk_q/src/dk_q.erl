@@ -2,16 +2,13 @@
 -include_lib("proper/include/proper.hrl").
 
 %% API
--export([from_str/2]).
--export([dnf/1]).
 -export([clauses/1]).
--export([depth/1]).
 
 %% Record declarations
 -record(and_q,  {l_sub :: q(), r_sub :: q()}).
 -record(or_q,   {l_sub :: q(), r_sub :: q()}).
--record(not_q,  {sub  :: q()}).
--record(term_q, {term :: utf8_str()}).
+-record(not_q,  {sub   :: q()}).
+-record(term_q, {kw    :: utf8_str()}).
 
 %% Type definitions
 -type q() :: {and_q,  q(), q()} |
@@ -24,21 +21,16 @@
 %% API
 %%----------------------------------------------------------------------------
 
-from_str(Str, Lang) ->
-    {ok,ParseTree} = dk_q_parser:parse(scan(Str)),
-    tree_to_query(ParseTree, Lang).
-
-dnf({Q,0}) ->
-    Q;
-dnf({Q,D}) ->
-    dnf(mv_not(Q), D).
-
-clauses(Q) ->
-    [flatten(X) || X <- and_subs(Q)].
+clauses(Str) ->
+    [flatten(X) || X <- and_subs(dnf(from_str(Str)))].
 
 %%----------------------------------------------------------------------------
 %% Internal functions
 %%----------------------------------------------------------------------------
+
+from_str(Str) ->
+    {ok,ParseTree} = dk_q_parser:parse(scan(Str)),
+    tree_to_query(ParseTree).
 
 scan(<<C/utf8,Rest/bytes>>) ->
     case C of
@@ -61,20 +53,24 @@ scan(<<C/utf8,Rest/bytes>>) ->
 scan(<<>>) ->
     [{'$end',1}].
 
-tree_to_query({and_q,SubTreeL,SubTreeR}, Lang) ->
-    {L, DepthL} = tree_to_query(SubTreeL, Lang),
-    {R, DepthR} = tree_to_query(SubTreeR, Lang),
+tree_to_query({and_q,SubTreeL,SubTreeR}) ->
+    {L, DepthL} = tree_to_query(SubTreeL),
+    {R, DepthR} = tree_to_query(SubTreeR),
     {#and_q{l_sub = L,r_sub = R},max(DepthL, DepthR)+1};
-tree_to_query({or_q,SubTreeL,SubTreeR}, Lang) ->
-    {L, DepthL} = tree_to_query(SubTreeL, Lang),
-    {R, DepthR} = tree_to_query(SubTreeR, Lang),
+tree_to_query({or_q,SubTreeL,SubTreeR}) ->
+    {L, DepthL} = tree_to_query(SubTreeL),
+    {R, DepthR} = tree_to_query(SubTreeR),
     {#or_q{l_sub = L,r_sub = R},max(DepthL, DepthR)+1};
-tree_to_query({not_q,SubTree},Lang) ->
-    {Sub,Depth} = tree_to_query(SubTree, Lang),
+tree_to_query({not_q,SubTree}) ->
+    {Sub,Depth} = tree_to_query(SubTree),
     {#not_q{sub = Sub},Depth+1};
-tree_to_query({term_q,{string,Keyword,_}}, Lang) ->
-    [Term|_] = dk_pp:terms(Keyword, Lang),
-    {#term_q{term = Term},0}.
+tree_to_query({term_q,{string,Keyword,_}}) ->
+    {#term_q{kw = Keyword},0}.
+
+dnf({Q,0}) ->
+    Q;
+dnf({Q,D}) ->
+    dnf(mv_not(Q), D).
 
 dnf(Q, 1) ->
     Q;
