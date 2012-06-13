@@ -2,7 +2,8 @@
 -include_lib("proper/include/proper.hrl").
 
 %% API
--export([clauses/1]).
+-export([execute/1]).
+-export([prepare/1]).
 
 %% Record declarations
 -record(and_q,  {l_sub :: q(), r_sub :: q()}).
@@ -21,8 +22,13 @@
 %% API
 %%----------------------------------------------------------------------------
 
-clauses(Str) ->
-    [flatten(X) || X <- and_subs(dnf(from_str(Str)))].
+prepare(Str) ->
+    Cs = [flatten(X) || X <- and_subs(dnf(from_str(Str)))],
+    [partition(C) || C <- Cs].
+
+execute(Cs) ->
+    plists:mapreduce(fun fetch/1, 
+                     lists:usort(lists:flatten([Ts ++ Ns || {Ts,Ns} <- Cs]))).
 
 %%----------------------------------------------------------------------------
 %% Internal functions
@@ -106,6 +112,28 @@ flatten({and_q,L,R}) ->
     lists:flatten([flatten(L),flatten(R)]);
 flatten(Q) ->
     [Q].
+
+partition(Qs) ->
+    {Pos,Neg} = lists:partition(fun (Q) -> is_record(Q, term_q) end, Qs),
+    {terms(Pos),terms(Neg)}.
+
+terms(Qs) ->
+    lists:usort([term(Q) || Q <- Qs]).
+
+term({not_q,{term_q,T}}) ->
+    T;
+term({term_q,T}) ->
+    T.
+
+fetch(K) ->
+    {K, case dk_pp:terms(K, "en") of                % FIXME: hardcoded lang
+            [] ->
+                gb_sets:new();
+            [T|[]] ->
+                dk_idx:doc_ids(T);
+            Ts ->
+                gb_sets:intersection(plists:map(fun dk_idx:doc_ids/1, Ts))
+        end}.
 
 %%----------------------------------------------------------------------------
 %% PropErties
