@@ -4,6 +4,8 @@
 %% API
 -export([from_str/2]).
 -export([dnf/1]).
+-export([clauses/1]).
+-export([depth/1]).
 
 %% Record declarations
 -record(and_q,  {l_sub :: q(), r_sub :: q()}).
@@ -30,6 +32,9 @@ dnf({Q,0}) ->
     Q;
 dnf({Q,D}) ->
     dnf(mv_not(Q), D).
+
+clauses(Q) ->
+    flatten(and_subs(Q)).
 
 %%----------------------------------------------------------------------------
 %% Internal functions
@@ -73,7 +78,7 @@ tree_to_query({term_q,{string,Keyword,_}}, Lang) ->
 
 dnf(Q, 1) ->
     Q;
-dnf(Q, D) ->    
+dnf(Q, D) ->
     dnf(mv_and(Q), D-1).
 
 mv_not({T,L,R}) ->
@@ -95,6 +100,16 @@ mv_and({T,L,R}) ->
     {T,mv_and(L),mv_and(R)};
 mv_and(Q) ->
     Q.
+
+and_subs({or_q,L,R}) ->
+    and_subs(L) ++ and_subs(R);
+and_subs(Q) ->
+    [Q].
+
+flatten({and_q,L,R}) ->
+    lists:flatten([flatten(L),flatten(R)]);
+flatten(Q) ->
+    [Q].
 
 %%----------------------------------------------------------------------------
 %% PropErties
