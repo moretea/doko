@@ -34,7 +34,7 @@ dnf({Q,D}) ->
     dnf(mv_not(Q), D).
 
 clauses(Q) ->
-    flatten(and_subs(Q)).
+    [flatten(X) || X <- and_subs(Q)].
 
 %%----------------------------------------------------------------------------
 %% Internal functions
