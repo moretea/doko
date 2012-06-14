@@ -27,9 +27,10 @@ prepare(Str) ->
     [partition(C) || C <- Cs].
 
 execute(Cs) ->
-    plists:mapreduce(
-      fun fetch/1, 
-      lists:usort(lists:flatten([Ts ++ Ns || {Ts,Ns} <- Cs]))).
+    Data = plists:mapreduce(
+             fun fetch/1, 
+             lists:usort(lists:flatten([Ts ++ Ns || {Ts,Ns} <- Cs]))),
+    gb_sets:union([exec(C, Data) || C <- Cs]).
 
 %%----------------------------------------------------------------------------
 %% Internal functions
@@ -127,14 +128,25 @@ term({term_q,T}) ->
     T.
 
 fetch(K) ->
-    {K, case dk_pp:terms(K, "en") of                % FIXME: hardcoded lang
+    {K, case dk_pp:terms(K, "en") of                   % FIXME: hardcoded lang
             [] ->
-                gb_sets:new();
+                stop_word;
             [T|[]] ->
                 dk_idx:doc_ids(T);
             Ts ->
                 gb_sets:intersection(plists:map(fun dk_idx:doc_ids/1, Ts))
         end}.
+
+exec({Ts,Ns}, Data) ->
+    case [S || T <- Ts, S <- dict:fetch(T, Data), S /= stop_word] of
+        [] ->
+            gb_sets:new();
+        Ss ->
+            gb_sets:subtract(
+              gb_sets:intersection(Ss),
+              gb_sets:union(
+                [S || N <- Ns, S <- dict:fetch(N, Data), S /= stop_word]))
+    end.
 
 %%----------------------------------------------------------------------------
 %% PropErties
