@@ -27,8 +27,9 @@ prepare(Str) ->
     [partition(C) || C <- Cs].
 
 execute(Cs) ->
-    plists:mapreduce(fun fetch/1, 
-                     lists:usort(lists:flatten([Ts ++ Ns || {Ts,Ns} <- Cs]))).
+    plists:mapreduce(
+      fun fetch/1, 
+      lists:usort(lists:flatten([Ts ++ Ns || {Ts,Ns} <- Cs]))).
 
 %%----------------------------------------------------------------------------
 %% Internal functions
