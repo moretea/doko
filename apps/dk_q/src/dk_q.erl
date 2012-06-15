@@ -30,7 +30,7 @@ execute(Cs) ->
     Data = plists:mapreduce(
              fun fetch/1, 
              lists:usort(lists:flatten([Ts ++ Ns || {Ts,Ns} <- Cs]))),
-    gb_sets:union([exec(C, Data) || C <- Cs]).
+    gb_sets:union(plists:map(fun (C) -> exec(C, Data) end, Cs)).
 
 %%----------------------------------------------------------------------------
 %% Internal functions
