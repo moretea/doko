@@ -29,7 +29,7 @@ execute(Str) ->
              fun fetch/1, 
              lists:usort(lists:flatten([Xs++Ys || {Xs,Ys} <- Clauses]))),
     %% calculate result
-    gb_sets:union(plists:map(fun (X) -> exec(X, Data) end, Clauses)).
+    gb_sets:union(plists:map(fun (X) -> calc(X, Data) end, Clauses)).
 
 %%----------------------------------------------------------------------------
 %% Internal functions
@@ -136,7 +136,7 @@ fetch(K) ->
                 gb_sets:intersection(plists:map(fun dk_idx:doc_ids/1, Ts))
         end}.
 
-exec({Ts,Ns}, Data) ->
+calc({Ts,Ns}, Data) ->
     case [S || T <- Ts, S <- dict:fetch(T, Data), S /= stop_word] of
         [] ->
             gb_sets:new();
