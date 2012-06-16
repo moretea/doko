@@ -6,5 +6,5 @@
   {registered, []},
   {applications, [kernel, stdlib]},
   {mod, {dk_app, []}},
-  {included_applications, [dk_ii, dk_meta, dk_ring]},
+  {included_applications, [dk_idx]},
   {env, []}]}.
