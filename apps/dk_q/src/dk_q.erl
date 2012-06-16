@@ -5,7 +5,7 @@
 -export([execute/1]).
 -export([prepare/1]).
 
-%% Record declarations
+%% Record declarations ("q" is short for "query")
 -record(and_q,  {l_sub :: q(), r_sub :: q()}).
 -record(or_q,   {l_sub :: q(), r_sub :: q()}).
 -record(not_q,  {sub   :: q()}).
