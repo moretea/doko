@@ -5,8 +5,8 @@
 -export([execute/1]).
 
 %% Record declarations ("q" is short for "query")
--record(and_q,  {l_sub   :: q(), r_sub :: q()}).
--record(or_q,   {l_sub   :: q(), r_sub :: q()}).
+-record(and_q,  {l_sub_q :: q(), r_sub_q :: q()}).
+-record(or_q,   {l_sub_q :: q(), r_sub_q :: q()}).
 -record(not_q,  {sub     :: q()}).
 -record(term_q, {keyword :: utf8_str()}).
 
@@ -60,11 +60,11 @@ scan(<<>>) ->
 tree_to_query({and_q,SubTreeL,SubTreeR}) ->
     {L, DepthL} = tree_to_query(SubTreeL),
     {R, DepthR} = tree_to_query(SubTreeR),
-    {#and_q{l_sub = L,r_sub = R},max(DepthL, DepthR)+1};
+    {#and_q{l_sub_q = L,r_sub_q = R},max(DepthL, DepthR)+1};
 tree_to_query({or_q,SubTreeL,SubTreeR}) ->
     {L, DepthL} = tree_to_query(SubTreeL),
     {R, DepthR} = tree_to_query(SubTreeR),
-    {#or_q{l_sub = L,r_sub = R},max(DepthL, DepthR)+1};
+    {#or_q{l_sub_q = L,r_sub_q = R},max(DepthL, DepthR)+1};
 tree_to_query({not_q,SubTree}) ->
     {Sub,Depth} = tree_to_query(SubTree),
     {#not_q{sub = Sub},Depth+1};
