@@ -54,14 +54,13 @@ execute(Str) ->
         end,
     Data = dict:from_list(plists:map(Fetch, UniqueKeywords)),
     %% calculate result
-    Calculate =
-        fun ({Keywords,NotKeywords}) ->
-                gb_sets:subtract(
-                  gb_sets:intersection(
-                    [dict:fetch(X, Data)||X <- Keywords]),
-                  gb_sets:union(
-                    [dict:fetch(X, Data)||X <- NotKeywords]))
-        end,
+    Calculate = fun ({Keywords,NotKeywords}) ->
+                        gb_sets:subtract(
+                          gb_sets:intersection(
+                            [dict:fetch(X, Data)||X <- Keywords]),
+                          gb_sets:union(
+                            [dict:fetch(X, Data)||X <- NotKeywords]))
+                end,
     gb_sets:union(plists:map(Calculate, Clauses)).
 
 %%----------------------------------------------------------------------------
