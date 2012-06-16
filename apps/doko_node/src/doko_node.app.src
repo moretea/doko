@@ -1,10 +1,10 @@
 %% -*- mode: erlang; fill-column: 78; -*-
 
-{application, doko,
- [{description, "Doko node"},
+{application, doko_node,
+ [{description, "Doko Node"},
   {vsn, "0.1"},
   {registered, []},
   {applications, [kernel, stdlib]},
-  {mod, {dk_app, []}},
+  {mod, {doko_node_app, []}},
   {included_applications, [dk_idx]},
   {env, []}]}.
