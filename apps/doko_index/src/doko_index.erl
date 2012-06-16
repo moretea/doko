@@ -1,20 +1,17 @@
-%% @private
--module(dk_idx_app).
+-module(doko_index).
 
--behaviour(application).
-
-%% application callbacks
--export([start/2, stop/1]).
+%% API
+-export([add_doc_id/2, doc_ids/1]).
 
 %%----------------------------------------------------------------------------
-%% application callbacks
+%% API
 %%----------------------------------------------------------------------------
 
-start(_StartType, _StartArgs) ->
-    dk_idx_sup:start_link().
+add_doc_id(Term, DocId) ->
+    doko_index_term:add_doc_id(doko_index_reg:server(Term), DocId).
 
-stop(_State) ->
-    ok.
+doc_ids(Term) ->
+    doko_index_term:doc_ids(doko_index_reg:server(Term)).
 
 %% Local variables:
 %% mode: erlang

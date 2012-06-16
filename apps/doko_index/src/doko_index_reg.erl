@@ -1,6 +1,6 @@
 %% @private
--module(dk_idx_reg).
--include("dk_idx.hrl").
+-module(doko_index_reg).
+-include("doko_index.hrl").
 
 -behaviour(gen_server).
 
@@ -42,7 +42,7 @@ handle_call({server, Term}, _From, Dict = State) ->
             {ok, Value} ->
                 {Value, State};
             error ->
-                {ok, NewServer} = supervisor:start_child(dk_idx_term_sup, []),
+                {ok, NewServer} = supervisor:start_child(doko_index_term_sup, []),
                 {NewServer, dict:store(Term, NewServer, Dict)}
         end,
     {reply, Server, NextState};

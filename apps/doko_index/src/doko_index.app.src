@@ -1,9 +1,9 @@
 %% -*- mode: erlang; fill-column: 78; -*-
 
-{application, dk_idx,
+{application, doko_index,
  [{description, "Inverted Index"},
   {vsn, "0.1"},
-  {registered, [dk_idx_sup, dk_idx_reg_sup, dk_idx_term_sup]},
+  {registered, [doko_index_sup, doko_index_reg_sup, doko_index_term_sup]},
   {applications, [kernel, stdlib]},
-  {mod, {dk_idx_app, []}} ,
+  {mod, {doko_index_app, []}} ,
   {env, []}]}.

@@ -24,7 +24,7 @@ start_link() ->
 %%----------------------------------------------------------------------------
 
 init([]) ->
-    {ok, {{one_for_one, 5, 10}, [?CHILD(dk_idx_sup, supervisor)]}}.
+    {ok, {{one_for_one, 5, 10}, [?CHILD(doko_index_sup, supervisor)]}}.
 
 %% Local variables:
 %% mode: erlang
