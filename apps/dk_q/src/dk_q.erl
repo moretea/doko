@@ -6,9 +6,9 @@
 -export([prepare/1]).
 
 %% Record declarations ("q" is short for "query")
--record(and_q,  {l_sub :: q(), r_sub :: q()}).
--record(or_q,   {l_sub :: q(), r_sub :: q()}).
--record(not_q,  {sub   :: q()}).
+-record(and_q,  {l_sub   :: q(), r_sub :: q()}).
+-record(or_q,   {l_sub   :: q(), r_sub :: q()}).
+-record(not_q,  {sub     :: q()}).
 -record(term_q, {keyword :: utf8_str()}).
 
 %% Type definitions
