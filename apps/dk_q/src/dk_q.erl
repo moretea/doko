@@ -24,7 +24,7 @@
 -spec execute(utf8_str()) -> gb_set(). %% TODO: might return an error
 execute(Str) ->
     %% parse and preprocess query
-    Clauses = [partition(flatten(X)) || X <- and_subs(dnf(from_str(Str)))],
+    Clauses = [partition(flatten(X)) || X <- clauses(dnf(from_str(Str)))],
     %% fetch data
     Data = plists:mapreduce(
              fun fetch/1, 
@@ -36,6 +36,9 @@ execute(Str) ->
 %% Internal functions
 %%----------------------------------------------------------------------------
 
+%% @doc Converts a UTF-8 string to a query. Returns a query record plus the
+%% depth of the corresponding tree.
+-spec from_str(utf8_str()) -> {q(),pos_integer()}.
 from_str(Str) ->
     {ok,ParseTree} = dk_q_parser:parse(scan(Str)),
     tree_to_query(ParseTree).
@@ -75,6 +78,8 @@ tree_to_query({not_q,SubTree}) ->
 tree_to_query({term_q,{string,Keyword,_}}) ->
     {#term_q{keyword = Keyword},0}.
 
+%% @doc Rewrites a query to disjunctive normal form.
+-spec dnf({q(),pos_integer()}) -> q().
 dnf({Q,0}) ->
     Q;
 dnf({Q,D}) ->
@@ -105,16 +110,21 @@ mv_and({T,L,R}) ->
 mv_and(Q) ->
     Q.
 
-and_subs({or_q,L,R}) ->
-    and_subs(L) ++ and_subs(R);
-and_subs(Q) ->
+%% @doc Converts a query in DNF to a lists of AND queries.
+clauses({or_q,L,R}) ->
+    clauses(L) ++ clauses(R);
+clauses(Q) ->
     [Q].
 
+%% @doc Converts an AND clause to  a list of TERM and NOT queries.
 flatten({and_q,L,R}) ->
     lists:flatten([flatten(L),flatten(R)]);
 flatten(Q) ->
     [Q].
 
+%% @doc Partitions a list of TERM and NOT queries into two lists, where the
+%% first lists contains all terms in TERM queries and the second list contains
+%% all terms in NOT queries.
 partition(Qs) ->
     {Pos,Neg} = lists:partition(fun (Q) -> is_record(Q, term_q) end, Qs),
     {terms(Pos),terms(Neg)}.
