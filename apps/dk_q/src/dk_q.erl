@@ -24,10 +24,10 @@
 -spec execute(utf8_str()) -> gb_set(). %% TODO: might return an error
 execute(Str) ->
     %% parse and preprocess query
-    Clauses = [partition(flatten(X)) || X <- clauses(dnf(from_str(Str)))],
+    Clauses = [partition(flatten(X))||X <- clauses(dnf(from_str(Str)))],
     %% translate keywords to terms
     UniqueKeywords =
-        lists:usort(lists:flatten([Xs++Ys || {Xs,Ys} <- Clauses])),
+        lists:usort(lists:flatten([Xs++Ys||{Xs,Ys} <- Clauses])),
     Translate = fun (Keyword) ->
                         %% FIXME: hardcoded language
                         Result = case dk_pp:terms(Keyword, "en") of
@@ -55,9 +55,9 @@ execute(Str) ->
         fun ({Keywords,NotKeywords}) ->
                 gb_sets:subtract(
                   gb_sets:intersection(
-                    [dict:fetch(X, Data) || X <- Keywords]),
+                    [dict:fetch(X, Data)||X <- Keywords]),
                   gb_sets:union(
-                    [dict:fetch(X, Data) || X <- NotKeywords]))
+                    [dict:fetch(X, Data)||X <- NotKeywords]))
         end,
     gb_sets:union(plists:map(Calc, Clauses)).
 
@@ -159,7 +159,7 @@ partition(Qs) ->
     {terms(Pos),terms(Neg)}.
 
 terms(Qs) ->
-    lists:usort([term(Q) || Q <- Qs]).
+    lists:usort([term(Q)||Q <- Qs]).
 
 term({not_q,{term_q,T}}) ->
     T;
