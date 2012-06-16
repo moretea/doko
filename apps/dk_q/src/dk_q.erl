@@ -21,6 +21,7 @@
 %% API
 %%----------------------------------------------------------------------------
 
+-spec execute(utf8_str()) -> gb_set(). %% TODO: might return an error
 execute(Str) ->
     %% parse and preprocess query
     Clauses = [partition(flatten(X)) || X <- and_subs(dnf(from_str(Str)))],
