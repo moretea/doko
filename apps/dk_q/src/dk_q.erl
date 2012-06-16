@@ -10,7 +10,7 @@
 %% Record declarations ("q" is short for "query")
 -record(and_q,  {l_sub_q :: q(), r_sub_q :: q()}).
 -record(or_q,   {l_sub_q :: q(), r_sub_q :: q()}).
--record(not_q,  {sub     :: q()}).
+-record(not_q,  {sub_q   :: q()}).
 -record(term_q, {keyword :: utf8_str()}).
 
 %% Type definitions
@@ -109,7 +109,7 @@ tree_to_query({or_q,SubTreeL,SubTreeR}) ->
     {#or_q{l_sub_q = L,r_sub_q = R},max(DepthL, DepthR)+1};
 tree_to_query({not_q,SubTree}) ->
     {Sub,Depth} = tree_to_query(SubTree),
-    {#not_q{sub = Sub},Depth+1};
+    {#not_q{sub_q = Sub},Depth+1};
 tree_to_query({term_q,{string,Keyword,_}}) ->
     {#term_q{keyword = Keyword},0}.
 
@@ -169,7 +169,7 @@ keywords(Qs) ->
     lists:usort([keyword(Q)||Q <- Qs]).
 
 keyword(Q = #not_q{}) ->
-    Q#not_q.sub#term_q.keyword;
+    Q#not_q.sub_q#term_q.keyword;
 keyword(Q) ->
     Q#term_q.keyword.
 
@@ -189,7 +189,7 @@ prop_all_not_element() ->
 
 not_element({_, L, R}) ->
     not_element(L) and not_element(R);
-not_element(#not_q{sub = #term_q{}}) ->
+not_element(#not_q{sub_q = #term_q{}}) ->
     true;
 not_element(#not_q{}) ->
     false;
