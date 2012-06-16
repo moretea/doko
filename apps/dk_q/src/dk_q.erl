@@ -23,13 +23,13 @@
 
 execute(Str) ->
     %% parse and preprocess query
-    Cs = [partition(flatten(X)) || X <- and_subs(dnf(from_str(Str)))],
+    Clauses = [partition(flatten(X)) || X <- and_subs(dnf(from_str(Str)))],
     %% fetch data
     Data = plists:mapreduce(
              fun fetch/1, 
-             lists:usort(lists:flatten([Ts ++ Ns || {Ts,Ns} <- Cs]))),
+             lists:usort(lists:flatten([Xs++Ys || {Xs,Ys} <- Clauses]))),
     %% calculate result
-    gb_sets:union(plists:map(fun (C) -> exec(C, Data) end, Cs)).
+    gb_sets:union(plists:map(fun (X) -> exec(X, Data) end, Clauses)).
 
 %%----------------------------------------------------------------------------
 %% Internal functions
