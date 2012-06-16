@@ -1,5 +1,8 @@
 -module(dk_q).
+-ifdef(TEST).
 -include_lib("proper/include/proper.hrl").
+-include_lib("eunit/include/eunit.hrl").
+-endif.
 
 %% API
 -export([execute/1]).
@@ -168,8 +171,15 @@ keyword(Q) ->
     Q#term_q.keyword.
 
 %%----------------------------------------------------------------------------
-%% PropErties
+%% Tests
 %%----------------------------------------------------------------------------
+
+-ifdef(TEST).
+
+proper_test_() ->
+    [{atom_to_list(F),
+      fun () -> ?assert(proper:quickcheck(?MODULE:F(), [long_result])) end}
+     || {F, 0} <- ?MODULE:module_info(exports), F > 'prop_', F < 'prop`'].
 
 prop_all_not_element() ->
     ?FORALL(X, q(), not_element(dnf({X,depth(X)}))).
@@ -202,6 +212,8 @@ nested_or({not_q,Q}) ->
     nested_or(Q);
 nested_or(_) ->
     false.
+
+-endif.
 
 %% Local variables:
 %% mode: erlang
