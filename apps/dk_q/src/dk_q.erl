@@ -54,7 +54,7 @@ execute(Str) ->
         end,
     Data = dict:from_list(plists:map(Fetch, UniqueKeywords)),
     %% calculate result
-    Calc =
+    Calculate =
         fun ({Keywords,NotKeywords}) ->
                 gb_sets:subtract(
                   gb_sets:intersection(
@@ -62,7 +62,7 @@ execute(Str) ->
                   gb_sets:union(
                     [dict:fetch(X, Data)||X <- NotKeywords]))
         end,
-    gb_sets:union(plists:map(Calc, Clauses)).
+    gb_sets:union(plists:map(Calculate, Clauses)).
 
 %%----------------------------------------------------------------------------
 %% Internal functions
