@@ -3,7 +3,6 @@
 
 %% API
 -export([execute/1]).
--export([prepare/1]).
 
 %% Record declarations ("q" is short for "query")
 -record(and_q,  {l_sub   :: q(), r_sub :: q()}).
@@ -22,11 +21,8 @@
 %% API
 %%----------------------------------------------------------------------------
 
-prepare(Str) ->
-    Cs = [flatten(X) || X <- and_subs(dnf(from_str(Str)))],
-    [partition(C) || C <- Cs].
-
-execute(Cs) ->
+execute(Str) ->
+    Cs = [partition(flatten(X)) || X <- and_subs(dnf(from_str(Str)))],
     Data = plists:mapreduce(
              fun fetch/1, 
              lists:usort(lists:flatten([Ts ++ Ns || {Ts,Ns} <- Cs]))),
