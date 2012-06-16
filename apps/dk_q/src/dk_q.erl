@@ -155,16 +155,17 @@ flatten(Q) ->
 %% first lists contains all terms in TERM queries and the second list contains
 %% all terms in NOT queries.
 partition(Qs) ->
-    {Pos,Neg} = lists:partition(fun (Q) -> is_record(Q, term_q) end, Qs),
-    {terms(Pos),terms(Neg)}.
+    {TermQs,NotQs} =
+        lists:partition(fun (Q) -> is_record(Q, term_q) end, Qs),
+    {keywords(TermQs),keywords(NotQs)}.
 
-terms(Qs) ->
-    lists:usort([term(Q)||Q <- Qs]).
+keywords(Qs) ->
+    lists:usort([keyword(Q)||Q <- Qs]).
 
-term({not_q,{term_q,T}}) ->
-    T;
-term({term_q,T}) ->
-    T.
+keyword(Q = #not_q{}) ->
+    Q#not_q.sub#term_q.keyword;
+keyword(Q) ->
+    Q#term_q.keyword.
 
 %%----------------------------------------------------------------------------
 %% PropErties
