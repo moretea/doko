@@ -1,5 +1,5 @@
 %% @private
--module(doko_index_reg).
+-module(doko_index_registry).
 -include("doko_index.hrl").
 
 -behaviour(gen_server).

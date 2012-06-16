@@ -24,7 +24,7 @@ start_link() ->
 %%----------------------------------------------------------------------------
 
 init([]) ->
-    {ok, {{one_for_one, 5, 10}, [?CHILD(doko_index_reg_sup, supervisor),
+    {ok, {{one_for_one, 5, 10}, [?CHILD(doko_index_registry_sup, supervisor),
                                  ?CHILD(doko_index_term_sup, supervisor)]}}.
 
 %% Local variables:

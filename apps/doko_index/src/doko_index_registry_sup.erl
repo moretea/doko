@@ -1,5 +1,5 @@
 %% @private
--module(doko_index_reg_sup).
+-module(doko_index_registry_sup).
 -include("doko_index.hrl").
 
 -behaviour(supervisor).
