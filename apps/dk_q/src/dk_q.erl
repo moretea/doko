@@ -9,7 +9,7 @@
 -record(and_q,  {l_sub :: q(), r_sub :: q()}).
 -record(or_q,   {l_sub :: q(), r_sub :: q()}).
 -record(not_q,  {sub   :: q()}).
--record(term_q, {kw    :: utf8_str()}).
+-record(term_q, {keyword :: utf8_str()}).
 
 %% Type definitions
 -type q() :: {and_q,  q(), q()} |
@@ -73,7 +73,7 @@ tree_to_query({not_q,SubTree}) ->
     {Sub,Depth} = tree_to_query(SubTree),
     {#not_q{sub = Sub},Depth+1};
 tree_to_query({term_q,{string,Keyword,_}}) ->
-    {#term_q{kw = Keyword},0}.
+    {#term_q{keyword = Keyword},0}.
 
 dnf({Q,0}) ->
     Q;
