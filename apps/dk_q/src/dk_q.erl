@@ -26,8 +26,21 @@ execute(Str) ->
     %% parse and preprocess query
     Clauses = [partition(flatten(X)) || X <- clauses(dnf(from_str(Str)))],
     %% fetch data
+    Fetch = fun (Keyword) ->
+                    %% FIXME: hardcoded language
+                    DocIds = case dk_pp:terms(Keyword, "en") of
+                                 [] ->
+                                     stop_word;
+                                 [X|[]] ->
+                                     dk_idx:doc_ids(X);
+                                 Xs ->
+                                     gb_sets:intersection(
+                                       plists:map(fun dk_idx:doc_ids/1, Xs))
+                             end,
+                    {Keyword,DocIds}
+            end,
     Data = plists:mapreduce(
-             fun fetch/1, 
+             Fetch,
              lists:usort(lists:flatten([Xs++Ys || {Xs,Ys} <- Clauses]))),
     %% calculate result
     gb_sets:union(plists:map(fun (X) -> calc(X, Data) end, Clauses)).
@@ -136,16 +149,6 @@ term({not_q,{term_q,T}}) ->
     T;
 term({term_q,T}) ->
     T.
-
-fetch(K) ->
-    {K, case dk_pp:terms(K, "en") of                   % FIXME: hardcoded lang
-            [] ->
-                stop_word;
-            [T|[]] ->
-                dk_idx:doc_ids(T);
-            Ts ->
-                gb_sets:intersection(plists:map(fun dk_idx:doc_ids/1, Ts))
-        end}.
 
 calc({Ts,Ns}, Data) ->
     case [S || T <- Ts, S <- dict:fetch(T, Data), S /= stop_word] of
