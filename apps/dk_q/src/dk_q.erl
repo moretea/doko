@@ -41,25 +41,29 @@ execute(Str) ->
                 end,
     Terms = dict:from_list(lists:map(Translate, UniqueKeywords)),
     %% fetch data
-    Fetch =
-        fun (Keyword) ->
-                DocIds = case dict:fetch(Keyword, Terms) of
-                             stop_word ->
-                                 gb_sets:new();
-                             Result ->
-                                 gb_sets:intersection(
-                                   plists:map(fun dk_idx:doc_ids/1, Result))
-                         end,
-                {Keyword,DocIds}
-        end,
-    Data = dict:from_list(plists:map(Fetch, UniqueKeywords)),
+    Fetch = fun (Term) ->
+                    DocIds = dk_idx:doc_ids(Term),
+                    {Term,DocIds}
+            end,
+    UniqueTerms = 
+        lists:flatten(
+          [Value||{_Key,Value} <- dict:to_list(Terms), Value /= stop_word]),
+    Data = dict:from_list(plists:map(Fetch, UniqueTerms)),
     %% calculate result
+    DocIds = fun (Keyword) ->
+                     case dict:fetch(Keyword, Terms) of
+                         stop_word ->
+                             gb_sets:new();
+                         Result ->
+                             [dict:fetch(X,Data)||X <- Result]
+                     end
+             end,
     Calculate = fun ({Keywords,NotKeywords}) ->
                         gb_sets:subtract(
                           gb_sets:intersection(
-                            [dict:fetch(X, Data)||X <- Keywords]),
+                            lists:flatten([DocIds(X)||X <- Keywords])),
                           gb_sets:union(
-                            [dict:fetch(X, Data)||X <- NotKeywords]))
+                            lists:flatten([DocIds(X)||X <- NotKeywords])))
                 end,
     gb_sets:union(plists:map(Calculate, Clauses)).
 
