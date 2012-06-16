@@ -25,36 +25,39 @@
 execute(Str) ->
     %% parse and preprocess query
     Clauses = [partition(flatten(X)) || X <- clauses(dnf(from_str(Str)))],
+    %% translate keywords to terms
+    UniqueKeywords =
+        lists:usort(lists:flatten([Xs++Ys || {Xs,Ys} <- Clauses])),
+    Translate = fun (Keyword) ->
+                        %% FIXME: hardcoded language
+                        Result = case dk_pp:terms(Keyword, "en") of
+                                     []    -> stop_word;
+                                     Terms -> Terms
+                                 end,
+                        {Keyword,Result}
+                end,
+    Terms = dict:from_list(lists:map(Translate, UniqueKeywords)),
     %% fetch data
-    Fetch = fun (Keyword) ->
-                    %% FIXME: hardcoded language
-                    DocIds = case dk_pp:terms(Keyword, "en") of
-                                 [] ->
-                                     stop_word;
-                                 [X|[]] ->
-                                     dk_idx:doc_ids(X);
-                                 Xs ->
-                                     gb_sets:intersection(
-                                       plists:map(fun dk_idx:doc_ids/1, Xs))
-                             end,
-                    {Keyword,DocIds}
-            end,
-    Data = plists:mapreduce(
-             Fetch,
-             lists:usort(lists:flatten([Xs++Ys || {Xs,Ys} <- Clauses]))),
+    Fetch =
+        fun (Keyword) ->
+                DocIds = case dict:fetch(Keyword, Terms) of
+                             stop_word ->
+                                 gb_sets:new();
+                             Result ->
+                                 gb_sets:intersection(
+                                   plists:map(fun dk_idx:doc_ids/1, Result))
+                         end,
+                {Keyword,DocIds}
+        end,
+    Data = dict:from_list(plists:map(Fetch, UniqueKeywords)),
     %% calculate result
-    Filter = fun (Keywords) -> [X || X <- Keywords, X /= stop_word] end,
     Calc =
         fun ({Keywords,NotKeywords}) ->
-                case [dict:fetch(X, Data) || X <- Filter(Keywords)] of
-                    [] ->
-                        gb_sets:new();
-                    Sets ->
-                        gb_sets:subtract(
-                          gb_sets:intersection(Sets),
-                          gb_sets:union(
-                            [dict:fetch(X, Data) || X <- NotKeywords]))
-                end
+                gb_sets:subtract(
+                  gb_sets:intersection(
+                    [dict:fetch(X, Data) || X <- Keywords]),
+                  gb_sets:union(
+                    [dict:fetch(X, Data) || X <- NotKeywords]))
         end,
     gb_sets:union(plists:map(Calc, Clauses)).
 
