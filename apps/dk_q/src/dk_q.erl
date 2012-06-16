@@ -43,7 +43,20 @@ execute(Str) ->
              Fetch,
              lists:usort(lists:flatten([Xs++Ys || {Xs,Ys} <- Clauses]))),
     %% calculate result
-    gb_sets:union(plists:map(fun (X) -> calc(X, Data) end, Clauses)).
+    Filter = fun (Keywords) -> [X || X <- Keywords, X /= stop_word] end,
+    Calc =
+        fun ({Keywords,NotKeywords}) ->
+                case [dict:fetch(X, Data) || X <- Filter(Keywords)] of
+                    [] ->
+                        gb_sets:new();
+                    Sets ->
+                        gb_sets:subtract(
+                          gb_sets:intersection(Sets),
+                          gb_sets:union(
+                            [dict:fetch(X, Data) || X <- NotKeywords]))
+                end
+        end,
+    gb_sets:union(plists:map(Calc, Clauses)).
 
 %%----------------------------------------------------------------------------
 %% Internal functions
@@ -149,17 +162,6 @@ term({not_q,{term_q,T}}) ->
     T;
 term({term_q,T}) ->
     T.
-
-calc({Ts,Ns}, Data) ->
-    case [S || T <- Ts, S <- dict:fetch(T, Data), S /= stop_word] of
-        [] ->
-            gb_sets:new();
-        Ss ->
-            gb_sets:subtract(
-              gb_sets:intersection(Ss),
-              gb_sets:union(
-                [S || N <- Ns, S <- dict:fetch(N, Data), S /= stop_word]))
-    end.
 
 %%----------------------------------------------------------------------------
 %% PropErties
