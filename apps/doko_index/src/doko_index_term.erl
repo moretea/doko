@@ -1,5 +1,5 @@
 %% @private
--module(dk_idx_term).
+-module(doko_index_term).
 
 -behaviour(gen_server).
 
