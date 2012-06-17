@@ -1,31 +1,30 @@
 %% @private
--module(doko_index_registry).
--include("doko_index.hrl").
+-module(dk_idx_term).
 
 -behaviour(gen_server).
 
 %% API
--export([server/1]).
--export([name/1]).
--export([start_link/1]).
+-export([add_doc_id/2, doc_ids/1]).
+-export([start_link/0]).
 
 %% gen_server callbacks
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2,
          code_change/3]).
 
+-define(SERVER, ?MODULE).
+
 %%----------------------------------------------------------------------------
 %% API
 %%----------------------------------------------------------------------------
 
-server(Term) ->
-    gen_server:call(name(erlang:phash2(Term, ?SIZE)), {server, Term}).
+add_doc_id(Server, DocId) ->
+    gen_server:cast(Server, {add, DocId}).
 
-name(N) ->
-    list_to_atom(?MODULE_STRING ++ "[" ++ integer_to_list(N) ++ "]").
+doc_ids(Server) ->
+    gen_server:call(Server, get).
 
-start_link(Name) ->
-    gen_server:start_link({local, Name}, ?MODULE, [], []).
-
+start_link() ->
+    gen_server:start_link(?MODULE, [], []).
 
 %%----------------------------------------------------------------------------
 %% gen_server callbacks
@@ -33,24 +32,19 @@ start_link(Name) ->
 
 %% @private
 init([]) ->
-    {ok, dict:new()}.
+    {ok, gb_sets:new()}.
 
 %% @private
-handle_call({server, Term}, _From, Dict = State) ->
-    {Server, NextState} =
-        case dict:find(Term, Dict) of
-            {ok, Value} ->
-                {Value, State};
-            error ->
-                {ok, NewServer} = supervisor:start_child(doko_index_term_sup, []),
-                {NewServer, dict:store(Term, NewServer, Dict)}
-        end,
-    {reply, Server, NextState};
-handle_call(_Request, _From, State) ->
+handle_call(get, _Client, Set = State) ->
+    {reply, Set, State};
+handle_call(_Request, _Client, State) ->
     Reply = ok,
     {reply, Reply, State}.
 
 %% @private
+handle_cast({add, DocId}, Set = _State) ->
+    NextState = gb_sets:insert(DocId, Set),
+    {noreply, NextState};
 handle_cast(_Msg, State) ->
     {noreply, State}.
 

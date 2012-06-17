@@ -1,5 +1,6 @@
 %% @private
--module(doko_index_term_sup).
+-module(dk_idx_reg_sup).
+-include("dk_idx.hrl").
 
 -behaviour(supervisor).
 
@@ -21,9 +22,17 @@ start_link() ->
 %%----------------------------------------------------------------------------
 
 init([]) ->
-    {ok, {{simple_one_for_one, 0, 1},
-          [{doko_index_term, {doko_index_term, start_link, []},
-            temporary, brutal_kill, worker, [doko_index_term]}]}}.
+    {ok, {{one_for_one, 5, 10},
+          [child_spec(N) || N <- lists:seq(0, ?SIZE - 1)]}}.
+
+%%----------------------------------------------------------------------------
+%% Internal functions
+%%----------------------------------------------------------------------------
+
+child_spec(N) ->
+    Name = dk_idx_reg:name(N),
+    Mod = dk_idx_reg,
+    {Name, {Mod, start_link, [Name]}, permanent, 2000, worker, [Mod]}.
 
 %% Local variables:
 %% mode: erlang

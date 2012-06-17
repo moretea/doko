@@ -1,7 +1,7 @@
 %% -*- mode: erlang; fill-column: 78; -*-
 
-{application, doko_query,
+{application, dk_q,
  [{description, "Query library"},
   {vsn, "0.1"},
-  {applications, [kernel, stdlib]},
+  {applications, [ernel, stdlib]},
   {env, []}]}.

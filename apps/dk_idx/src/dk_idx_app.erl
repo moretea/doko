@@ -1,5 +1,5 @@
 %% @private
--module(doko_index_app).
+-module(dk_idx_app).
 
 -behaviour(application).
 
@@ -11,7 +11,7 @@
 %%----------------------------------------------------------------------------
 
 start(_StartType, _StartArgs) ->
-    doko_index_sup:start_link().
+    dk_idx_sup:start_link().
 
 stop(_State) ->
     ok.

@@ -1,6 +1,5 @@
 %% @private
--module(doko_index_registry_sup).
--include("doko_index.hrl").
+-module(dk_idx_sup).
 
 -behaviour(supervisor).
 
@@ -9,6 +8,9 @@
 
 %% supervisor callbacks
 -export([init/1]).
+
+%% Helper macro for declaring children of supervisor
+-define(CHILD(I, Type), {I, {I, start_link, []}, permanent, 2000, Type, [I]}).
 
 %%----------------------------------------------------------------------------
 %% API
@@ -22,17 +24,8 @@ start_link() ->
 %%----------------------------------------------------------------------------
 
 init([]) ->
-    {ok, {{one_for_one, 5, 10},
-          [child_spec(N) || N <- lists:seq(0, ?SIZE - 1)]}}.
-
-%%----------------------------------------------------------------------------
-%% Internal functions
-%%----------------------------------------------------------------------------
-
-child_spec(N) ->
-    Name = doko_index_reg:name(N),
-    Mod = doko_index_reg,
-    {Name, {Mod, start_link, [Name]}, permanent, 2000, worker, [Mod]}.
+    {ok, {{one_for_one, 5, 10}, [?CHILD(dk_idx_reg_sup, supervisor),
+                                 ?CHILD(dk_idx_term_sup, supervisor)]}}.
 
 %% Local variables:
 %% mode: erlang

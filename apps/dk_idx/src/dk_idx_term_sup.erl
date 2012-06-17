@@ -1,5 +1,5 @@
 %% @private
--module(doko_node_sup).
+-module(dk_idx_term_sup).
 
 -behaviour(supervisor).
 
@@ -8,9 +8,6 @@
 
 %% supervisor callbacks
 -export([init/1]).
-
-%% Helper macro for declaring children of supervisor
--define(CHILD(I, Type), {I, {I, start_link, []}, permanent, 5000, Type, [I]}).
 
 %%----------------------------------------------------------------------------
 %% API
@@ -24,7 +21,9 @@ start_link() ->
 %%----------------------------------------------------------------------------
 
 init([]) ->
-    {ok, {{one_for_one, 5, 10}, [?CHILD(doko_index_sup, supervisor)]}}.
+    {ok, {{simple_one_for_one, 0, 1},
+          [{dk_idx_term, {dk_idx_term, start_link, []},
+            temporary, brutal_kill, worker, [dk_idx_term]}]}}.
 
 %% Local variables:
 %% mode: erlang

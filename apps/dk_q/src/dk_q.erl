@@ -1,4 +1,4 @@
--module(doko_query).
+-module(dk_q).
 -ifdef(TEST).
 -include_lib("proper/include/proper.hrl").
 -include_lib("eunit/include/eunit.hrl").
@@ -42,7 +42,7 @@ execute(Str) ->
     Terms = dict:from_list(lists:map(Translate, UniqueKeywords)),
     %% fetch data
     Fetch = fun (Term) ->
-                    DocIds = doko_index:doc_ids(Term),
+                    DocIds = dk_idx:doc_ids(Term),
                     {Term,DocIds}
             end,
     UniqueTerms = 
@@ -75,7 +75,7 @@ execute(Str) ->
 %% depth of the corresponding tree.
 -spec from_str(utf8_str()) -> {q(),pos_integer()}.
 from_str(Str) ->
-    {ok,ParseTree} = doko_query_parser:parse(scan(Str)),
+    {ok,ParseTree} = dk_q_parser:parse(scan(Str)),
     tree_to_query(ParseTree).
 
 scan(<<C/utf8,Rest/bytes>>) ->
