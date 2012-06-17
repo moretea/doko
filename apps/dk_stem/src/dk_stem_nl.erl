@@ -6,7 +6,7 @@
 %%----------------------------------------------------------------------------
 
 -module(dk_stem_nl).
--include("../../dk_utf8/include/dk_utf8.hrl").
+-include("../../doko_utf8/include/doko_utf8.hrl").
 
 %% API
 %% -export([stem/1]).
@@ -21,7 +21,7 @@
 
 -spec stem(utf8_string()) -> utf8_string().
 stem(Word)  ->
-    Length = dk_utf8:length(Word),
+    Length = doko_utf8:length(Word),
     if
         Length =< 3 ->
             remove_umlauts(remove_accents(Word));
@@ -37,19 +37,19 @@ stem(Word)  ->
 step1(Word) ->
     {StdR1, _R2} = standard_r1_r2(Word),
     R1 = adjust_r1(Word, Word, StdR1),
-    Heden = dk_utf8:suffix(<<"heden">>, R1),
-    Ene = dk_utf8:suffix(<<"ene">>, R1),
-    En = dk_utf8:suffix(<<"en">>, R1),
-    Se = dk_utf8:suffix(<<"se">>, R1),
-    S = dk_utf8:suffix(<<"s">>, R1),
+    Heden = doko_utf8:suffix(<<"heden">>, R1),
+    Ene = doko_utf8:suffix(<<"ene">>, R1),
+    En = doko_utf8:suffix(<<"en">>, R1),
+    Se = doko_utf8:suffix(<<"se">>, R1),
+    S = doko_utf8:suffix(<<"s">>, R1),
     if
         Heden ->
-            <<(dk_utf8:substr(Word, 0, -5))/bytes, "heid">>;
+            <<(doko_utf8:substr(Word, 0, -5))/bytes, "heid">>;
         Ene or En ->
-            WordHeden = dk_utf8:suffix(<<"heden">>, Word),
+            WordHeden = doko_utf8:suffix(<<"heden">>, Word),
             NewWord = if
-                          En -> dk_utf8:substr(Word, 0, -2);
-                          Ene -> dk_utf8:substr(Word, 0, -3)
+                          En -> doko_utf8:substr(Word, 0, -2);
+                          Ene -> doko_utf8:substr(Word, 0, -3)
                       end,
             ValidEnding = valid_en_ending(NewWord),
             if
@@ -58,8 +58,8 @@ step1(Word) ->
             end;
         Se or S ->
             NewWord = if
-                          S -> dk_utf8:substr( Word, 0, -1);
-                          Se -> dk_utf8:substr( Word, 0, -2)
+                          S -> doko_utf8:substr( Word, 0, -1);
+                          Se -> doko_utf8:substr( Word, 0, -2)
                       end,
             ValidEnding = valid_s_ending(NewWord),
             if
@@ -73,7 +73,7 @@ step1(Word) ->
 step2(Word) ->
     {StdR1, _R2} = standard_r1_r2(Word),
     R1 = adjust_r1(Word, Word, StdR1),
-    SuffixE = dk_utf8:suffix(<<"e">>, R1),
+    SuffixE = doko_utf8:suffix(<<"e">>, R1),
     if
         not SuffixE ->
             {Word, false};
@@ -84,7 +84,7 @@ step2(Word) ->
                 nomatch ->
                     {Word, false};
                 _ ->
-                    NewWord = undouble_end(dk_utf8:substr(Word, 0, -1)),
+                    NewWord = undouble_end(doko_utf8:substr(Word, 0, -1)),
                     {NewWord, true}
             end
     end.
@@ -92,27 +92,27 @@ step2(Word) ->
 step3a({Word, Step2Success}) ->
     {StdR1, R2} = standard_r1_r2(Word),
     R1 = adjust_r1(Word, Word, StdR1),
-    Heid = dk_utf8:suffix(<<"heid">>, R2),
-    Cheid = dk_utf8:suffix(<<"cheid">>, Word),
+    Heid = doko_utf8:suffix(<<"heid">>, R2),
+    Cheid = doko_utf8:suffix(<<"cheid">>, Word),
     if
         (not Heid) or Cheid ->
             {Word, Step2Success};
         true ->
-            NewWord = dk_utf8:substr(Word, 0, -4),
-            NewR1 = dk_utf8:substr(R1, 0, -4),
-            En = dk_utf8:suffix(<<"en">>, NewR1),
+            NewWord = doko_utf8:substr(Word, 0, -4),
+            NewR1 = doko_utf8:substr(R1, 0, -4),
+            En = doko_utf8:suffix(<<"en">>, NewR1),
             if
                 not En ->
                     {NewWord, Step2Success};
                 true ->
                      ValidEnding =
-                        valid_en_ending(dk_utf8:substr(NewR1, 0, -2)),
+                        valid_en_ending(doko_utf8:substr(NewR1, 0, -2)),
                     if
                         not ValidEnding ->
                             {NewWord, Step2Success};
                         true ->
                             NewNewWord = undouble_end(
-                                           dk_utf8:substr(NewWord, 0, -2)),
+                                           doko_utf8:substr(NewWord, 0, -2)),
                             {NewNewWord, Step2Success}
                     end
             end
@@ -120,34 +120,34 @@ step3a({Word, Step2Success}) ->
 
 step3b({Word, Step2Success}) ->
     {_StdR1, R2} = standard_r1_r2(Word),
-    End = dk_utf8:suffix(<<"end">>, R2),
-    Ing = dk_utf8:suffix(<<"ing">>, R2),
-    Ig = dk_utf8:suffix(<<"ig">>, R2),
-    Eig = dk_utf8:suffix(<<"eig">>, Word),
-    Lijk = dk_utf8:suffix(<<"lijk">>, R2),
-    Baar = dk_utf8:suffix(<<"baar">>, R2),
-    Bar = dk_utf8:suffix(<<"bar">>, R2),
+    End = doko_utf8:suffix(<<"end">>, R2),
+    Ing = doko_utf8:suffix(<<"ing">>, R2),
+    Ig = doko_utf8:suffix(<<"ig">>, R2),
+    Eig = doko_utf8:suffix(<<"eig">>, Word),
+    Lijk = doko_utf8:suffix(<<"lijk">>, R2),
+    Baar = doko_utf8:suffix(<<"baar">>, R2),
+    Bar = doko_utf8:suffix(<<"bar">>, R2),
     if
         End or Ing ->
-            NewWord = dk_utf8:substr(Word, 0, -3),
-            NewR2 = dk_utf8:substr(R2, 0, -3),
-            Ig2 = dk_utf8:suffix(<<"ig">>, NewR2),
-            Eig2 = dk_utf8:suffix(<<"eig">>, NewWord),
+            NewWord = doko_utf8:substr(Word, 0, -3),
+            NewR2 = doko_utf8:substr(R2, 0, -3),
+            Ig2 = doko_utf8:suffix(<<"ig">>, NewR2),
+            Eig2 = doko_utf8:suffix(<<"eig">>, NewWord),
             if
                 Ig2 and not Eig2 ->
-                    dk_utf8:substr(NewWord, 0, -2);
+                    doko_utf8:substr(NewWord, 0, -2);
                 true ->
                     undouble_end(NewWord)
             end;
         Ig and not Eig ->
-            dk_utf8:substr(Word, 0, -2);
+            doko_utf8:substr(Word, 0, -2);
         Lijk ->
-            {NewWord, _} = step2(dk_utf8:substr(Word, 0, -4)),
+            {NewWord, _} = step2(doko_utf8:substr(Word, 0, -4)),
             NewWord;
         Baar ->
-            dk_utf8:substr(Word, 0, -4);
+            doko_utf8:substr(Word, 0, -4);
         Bar and Step2Success ->
-            dk_utf8:substr(Word, 0, -3);
+            doko_utf8:substr(Word, 0, -3);
         true ->
             Word
     end.
@@ -179,13 +179,13 @@ standard_r1_r2(Word) ->
 adjust_r1(Word, <<V/utf8, C/utf8, L1/utf8, L2/utf8>>, R1) ->
     Test = vowel(V) and not vowel(C),
     case Test of
-        true -> dk_utf8:substr(Word, 3);
+        true -> doko_utf8:substr(Word, 3);
         false -> adjust_r1(Word, <<C/utf8, L1/utf8, L2/utf8>>, R1)
     end;
 adjust_r1(Word, <<V/utf8, C/utf8, _/utf8>>, R1) ->
     Test = vowel(V) and not vowel(C),
     case Test of
-        true -> dk_utf8:substr(Word, 3);
+        true -> doko_utf8:substr(Word, 3);
         false -> R1
     end;
 adjust_r1(Word, <<_/utf8, Rest/bytes>>, R1) ->
@@ -206,7 +206,7 @@ vowel(C) ->
     end.
 
 valid_s_ending(Word) ->
-    Drow = dk_utf8:reverse(Word),
+    Drow = doko_utf8:reverse(Word),
     case Drow of
         <<"j"/utf8, _/bytes>> -> false;
         <<C/utf8, _/bytes>> -> not vowel(C)
@@ -215,18 +215,18 @@ valid_s_ending(Word) ->
 valid_en_ending(<<>>) ->
     false;
 valid_en_ending(Word) ->
-    Drow = dk_utf8:reverse(Word),
+    Drow = doko_utf8:reverse(Word),
     case Drow of
         <<"meg", _/bytes>> -> false;
         <<C/utf8, _/bytes>> -> not vowel(C)
     end.
 
 undouble_end(Word) ->
-    DoubleEnd = dk_utf8:suffix(<<"kk">>, Word) or
-                dk_utf8:suffix(<<"dd">>, Word) or
-                dk_utf8:suffix(<<"tt">>, Word),
+    DoubleEnd = doko_utf8:suffix(<<"kk">>, Word) or
+                doko_utf8:suffix(<<"dd">>, Word) or
+                doko_utf8:suffix(<<"tt">>, Word),
     if
-        DoubleEnd -> dk_utf8:substr(Word, 0, -1);
+        DoubleEnd -> doko_utf8:substr(Word, 0, -1);
         true -> Word
     end.
 

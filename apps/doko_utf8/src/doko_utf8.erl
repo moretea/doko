@@ -1,5 +1,5 @@
--module(dk_utf8).
--include("../include/dk_utf8.hrl").
+-module(doko_utf8).
+-include("../include/doko_utf8.hrl").
 -compile({no_auto_import, [length/1]}).
 
 %% API

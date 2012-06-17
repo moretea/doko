@@ -7,7 +7,7 @@
 %%----------------------------------------------------------------------------
 
 -module(dk_stem_en).
--include("../../dk_utf8/include/dk_utf8.hrl").
+-include("../../doko_utf8/include/doko_utf8.hrl").
 
 %% API
 -export([stem/1]).
@@ -39,7 +39,7 @@ stem(<<"sky">>) -> <<"sky">>;
 stem(<<"tying">>) -> <<"tie">>;
 stem(<<"ugly">>) -> <<"ugli">>;
 stem(Word)  ->
-    Length = dk_utf8:length(Word),
+    Length = doko_utf8:length(Word),
     if Length =< 2 -> Word;
        true ->
             NewWord = step1a(step0(preprocess(Word))),
@@ -63,37 +63,37 @@ stem(Word)  ->
 %%----------------------------------------------------------------------------
 
 step0(Word) ->
-    Apo_s_apo = dk_utf8:suffix(<<"'s'">>, Word),
-    Apo_s = dk_utf8:suffix(<<"'s">>, Word),
-    Apo = dk_utf8:suffix(<<"'">>, Word),
+    Apo_s_apo = doko_utf8:suffix(<<"'s'">>, Word),
+    Apo_s = doko_utf8:suffix(<<"'s">>, Word),
+    Apo = doko_utf8:suffix(<<"'">>, Word),
     if
-        Apo_s_apo -> dk_utf8:substr(Word, 0, -3);
-        Apo_s -> dk_utf8:substr(Word, 0, -2);
-        Apo -> dk_utf8:substr(Word, 0, -1);
+        Apo_s_apo -> doko_utf8:substr(Word, 0, -3);
+        Apo_s -> doko_utf8:substr(Word, 0, -2);
+        Apo -> doko_utf8:substr(Word, 0, -1);
         true -> Word
     end.
 
 step1a(Word) ->
-    Sses = dk_utf8:suffix(<<"sses">>, Word),
-    Ied = dk_utf8:suffix(<<"ied">>, Word),
-    Ies = dk_utf8:suffix(<<"ies">>, Word),
-    Us = dk_utf8:suffix(<<"us">>, Word),
-    Ss = dk_utf8:suffix(<<"ss">>, Word),
-    S = dk_utf8:suffix(<<"s">>, Word),
+    Sses = doko_utf8:suffix(<<"sses">>, Word),
+    Ied = doko_utf8:suffix(<<"ied">>, Word),
+    Ies = doko_utf8:suffix(<<"ies">>, Word),
+    Us = doko_utf8:suffix(<<"us">>, Word),
+    Ss = doko_utf8:suffix(<<"ss">>, Word),
+    S = doko_utf8:suffix(<<"s">>, Word),
     if
         Sses ->
-            dk_utf8:substr(Word, 0, -2);
+            doko_utf8:substr(Word, 0, -2);
         Ied or Ies ->
-            case dk_utf8:length(Word) of
-                3 -> dk_utf8:substr(Word, 0, 2);
-                4 -> dk_utf8:substr(Word, 0, 3);
-                _ -> dk_utf8:substr(Word, 0, -2)
+            case doko_utf8:length(Word) of
+                3 -> doko_utf8:substr(Word, 0, 2);
+                4 -> doko_utf8:substr(Word, 0, 3);
+                _ -> doko_utf8:substr(Word, 0, -2)
             end;
         Us or Ss ->
             Word;
         S ->
-            case vowel(dk_utf8:substr(Word, 0, -2)) of
-                true -> dk_utf8:substr(Word, 0, -1);
+            case vowel(doko_utf8:substr(Word, 0, -2)) of
+                true -> doko_utf8:substr(Word, 0, -1);
                 false -> Word
             end;
         true ->
@@ -102,21 +102,21 @@ step1a(Word) ->
 
 step1b(Word) ->
     {R1, _} = r1_r2(Word),
-    Eed = dk_utf8:suffix(<<"eed">>, Word),
-    Eedly = dk_utf8:suffix(<<"eedly">>, Word),
-    Ed = dk_utf8:suffix(<<"ed">>, Word),
-    Edly = dk_utf8:suffix(<<"edly">>, Word),
-    Ing = dk_utf8:suffix(<<"ing">>, Word),
-    Ingly = dk_utf8:suffix(<<"ingly">>, Word),
+    Eed = doko_utf8:suffix(<<"eed">>, Word),
+    Eedly = doko_utf8:suffix(<<"eedly">>, Word),
+    Ed = doko_utf8:suffix(<<"ed">>, Word),
+    Edly = doko_utf8:suffix(<<"edly">>, Word),
+    Ing = doko_utf8:suffix(<<"ing">>, Word),
+    Ingly = doko_utf8:suffix(<<"ingly">>, Word),
     if
         Eed -> 
-            case dk_utf8:suffix(<<"eed">>, R1) of
-                true -> dk_utf8:substr(Word, 0, -1);
+            case doko_utf8:suffix(<<"eed">>, R1) of
+                true -> doko_utf8:substr(Word, 0, -1);
                 false -> Word
             end;
         Eedly ->
-            case dk_utf8:suffix(<<"eedly">>, R1) of
-                true -> dk_utf8:substr(Word, 0, -3);
+            case doko_utf8:suffix(<<"eedly">>, R1) of
+                true -> doko_utf8:substr(Word, 0, -3);
                 false -> Word
             end;
         Ed -> del_1b(Word, -2);
@@ -127,18 +127,18 @@ step1b(Word) ->
     end.
 
 del_1b(Word, N) ->
-    NewWord = dk_utf8:substr(Word, 0, N),
+    NewWord = doko_utf8:substr(Word, 0, N),
     case vowel(NewWord) of
         false -> Word;
         true ->
-            At = dk_utf8:suffix(<<"at">>, NewWord),
-            Bl = dk_utf8:suffix(<<"bl">>, NewWord),
-            Iz = dk_utf8:suffix(<<"iz">>, NewWord),
+            At = doko_utf8:suffix(<<"at">>, NewWord),
+            Bl = doko_utf8:suffix(<<"bl">>, NewWord),
+            Iz = doko_utf8:suffix(<<"iz">>, NewWord),
             case At or Bl or Iz of
                 true -> <<NewWord/bytes, "e">>;
                 false ->
                     case double_end(NewWord) of
-                        true -> dk_utf8:substr(NewWord, 0, -1);
+                        true -> doko_utf8:substr(NewWord, 0, -1);
                         false ->
                             case short(NewWord) of
                                 true -> <<NewWord/bytes, "e">>;
@@ -149,13 +149,13 @@ del_1b(Word, N) ->
     end.
 
 step1c(Word) ->
-    case dk_utf8:length(Word) of
+    case doko_utf8:length(Word) of
         2 -> Word;
         _ ->
             Regex = [<<"[^">>, ?VOWELS, <<"][yY]$">>],
             Options = [unicode, {capture, none}],
             case re:run(Word, Regex, Options) of
-                match -> <<(dk_utf8:substr(Word, 0, -1))/bytes, "i">>;
+                match -> <<(doko_utf8:substr(Word, 0, -1))/bytes, "i">>;
                 nomatch -> Word
             end
     end.
@@ -184,20 +184,20 @@ step2(Word) ->
             {<<"izer">>, <<"ize">>},
             {<<"bli">>, <<"ble">>}],
     {R1, _} = r1_r2(Word),
-    Pred = fun({Suffix, _}) -> not dk_utf8:suffix(Suffix, R1) end,
+    Pred = fun({Suffix, _}) -> not doko_utf8:suffix(Suffix, R1) end,
     case lists:dropwhile(Pred, List) of
         [{Suffix, NewSuffix} | _] ->
-            Prefix = dk_utf8:substr(Word, 0, -(dk_utf8:length(Suffix))),
+            Prefix = doko_utf8:substr(Word, 0, -(doko_utf8:length(Suffix))),
             <<Prefix/bytes, NewSuffix/bytes>>;
         [] ->
-            Ogi = dk_utf8:suffix(<<"ogi">>, R1),
-            Logi = dk_utf8:suffix(<<"logi">>, Word),
+            Ogi = doko_utf8:suffix(<<"ogi">>, R1),
+            Logi = doko_utf8:suffix(<<"logi">>, Word),
             if
                 Ogi and Logi ->
-                    dk_utf8:substr(Word, 0, -1);
+                    doko_utf8:substr(Word, 0, -1);
                 true ->
-                    Suffix = dk_utf8:suffix(<<"li">>, R1),
-                    NewWord = dk_utf8:substr(Word, 0, -2),
+                    Suffix = doko_utf8:suffix(<<"li">>, R1),
+                    NewWord = doko_utf8:substr(Word, 0, -2),
                     Ending = valid_li_ending(NewWord),
                     case {Suffix, Ending} of
                         {true, true} -> NewWord;
@@ -216,14 +216,14 @@ step3(Word) ->
             {<<"ness">>, <<>>},
             {<<"ful">>, <<>>}],
     {R1, R2} = r1_r2(Word),
-    Pred = fun({Suffix, _}) -> not dk_utf8:suffix(Suffix, R1) end,
+    Pred = fun({Suffix, _}) -> not doko_utf8:suffix(Suffix, R1) end,
     case lists:dropwhile(Pred, List) of
         [{Suffix, NewSuffix} | _] ->
-            Prefix = dk_utf8:substr(Word, 0, -(dk_utf8:length(Suffix))),
+            Prefix = doko_utf8:substr(Word, 0, -(doko_utf8:length(Suffix))),
             <<Prefix/bytes, NewSuffix/bytes>>;
         [] ->
-            case dk_utf8:suffix(<<"ative">>, R2) of
-                true -> dk_utf8:substr(Word, 0, -5);
+            case doko_utf8:suffix(<<"ative">>, R2) of
+                true -> doko_utf8:substr(Word, 0, -5);
                 _ -> Word
             end
     end.
@@ -233,40 +233,40 @@ step4(Word) ->
             <<"ment">>, <<"ant">>, <<"ate">>, <<"ent">>, <<"ism">>, <<"iti">>,
             <<"ive">>, <<"ize">>, <<"ous">>, <<"al">>, <<"er">>, <<"ic">>],
     {_, R2} = r1_r2(Word),
-    Pred = fun(Suffix) -> not dk_utf8:suffix(Suffix, Word) end,
+    Pred = fun(Suffix) -> not doko_utf8:suffix(Suffix, Word) end,
     case lists:dropwhile(Pred, List) of
         [Suffix | _] ->
-            case dk_utf8:suffix(Suffix, R2) of
+            case doko_utf8:suffix(Suffix, R2) of
                 true ->
-                    dk_utf8:substr(Word, 0, -(dk_utf8:length(Suffix)));
+                    doko_utf8:substr(Word, 0, -(doko_utf8:length(Suffix)));
                 false ->
                     Word
             end;
         [] ->
-            Ion = dk_utf8:suffix(<<"ion">>, R2),
-            Tion = dk_utf8:suffix(<<"tion">>, Word),
-            Sion = dk_utf8:suffix(<<"sion">>, Word),
+            Ion = doko_utf8:suffix(<<"ion">>, R2),
+            Tion = doko_utf8:suffix(<<"tion">>, Word),
+            Sion = doko_utf8:suffix(<<"sion">>, Word),
             if
-                Ion and (Tion or Sion) -> dk_utf8:substr(Word, 0, -3);
+                Ion and (Tion or Sion) -> doko_utf8:substr(Word, 0, -3);
                 true -> Word
             end
     end.
 
 step5(Word) ->
     {R1, R2} = r1_r2(Word),
-    R1E = dk_utf8:suffix(<<"e">>, R1),
-    R2E = dk_utf8:suffix(<<"e">>, R2),
-    SuffixL = dk_utf8:suffix(<<"l">>, R2),
-    DoubleL = dk_utf8:suffix(<<"ll">>, Word),
+    R1E = doko_utf8:suffix(<<"e">>, R1),
+    R2E = doko_utf8:suffix(<<"e">>, R2),
+    SuffixL = doko_utf8:suffix(<<"l">>, R2),
+    DoubleL = doko_utf8:suffix(<<"ll">>, Word),
     if
         SuffixL and DoubleL ->
-            dk_utf8:substr(Word, 0, -1);
+            doko_utf8:substr(Word, 0, -1);
         R2E ->
-            dk_utf8:substr(Word, 0, -1);
+            doko_utf8:substr(Word, 0, -1);
         R1E ->
-            NewWord = dk_utf8:substr(Word, 0, -1),
-            case short_syllable(dk_utf8:substr(NewWord, -3)) of 
-                false -> dk_utf8:substr(Word, 0, -1);
+            NewWord = doko_utf8:substr(Word, 0, -1),
+            case short_syllable(doko_utf8:substr(NewWord, -3)) of 
+                false -> doko_utf8:substr(Word, 0, -1);
                 true -> Word
             end;
         true ->
@@ -274,7 +274,7 @@ step5(Word) ->
     end.
 
 valid_li_ending(Word) ->
-    lists:member(dk_utf8:substr(Word, -1),
+    lists:member(doko_utf8:substr(Word, -1),
                  [<<"c">>, <<"d">>, <<"e">>, <<"g">>, <<"h">>, <<"k">>,
                   <<"m">>, <<"n">>, <<"r">>, <<"t">>]).
 
@@ -299,7 +299,7 @@ short_syllable(_) ->
     true.
 
 double_end(Word) ->
-    lists:member(dk_utf8:substr(Word, -2),
+    lists:member(doko_utf8:substr(Word, -2),
                  [<<"bb">>, <<"dd">>, <<"ff">>, <<"gg">>, <<"mm">>, <<"nn">>,
                   <<"pp">>, <<"rr">>, <<"tt">>]).
 

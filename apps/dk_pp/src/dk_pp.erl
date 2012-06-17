@@ -1,5 +1,5 @@
 -module(dk_pp).
--include("../../dk_utf8/include/dk_utf8.hrl").
+-include("../../doko_utf8/include/doko_utf8.hrl").
 
 %% API
 -export([terms/2]).
@@ -15,7 +15,7 @@ terms(Str, Lang) ->
       plists:map(
         fun (T) -> (list_to_atom("dk_stem_" ++ Lang)):stem(T) end,
         plists:usort(
-          [T || T <- tokenize(dk_utf8:case_fold(Str), Lang),
+          [T || T <- tokenize(doko_utf8:case_fold(Str), Lang),
                 not(stop_word(T, Lang))]))).
 
 %%----------------------------------------------------------------------------
