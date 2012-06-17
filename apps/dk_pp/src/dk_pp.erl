@@ -13,7 +13,7 @@
 terms(Str, Lang) ->
     plists:usort(
       plists:map(
-        fun (T) -> (list_to_atom("dk_stem_" ++ Lang)):stem(T) end,
+        fun (T) -> (list_to_atom("doko_stemming_" ++ Lang)):stem(T) end,
         plists:usort(
           [T || T <- tokenize(doko_utf8:case_fold(Str), Lang),
                 not(stop_word(T, Lang))]))).

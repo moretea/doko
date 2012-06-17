@@ -5,7 +5,7 @@
 %% page</a> for more information about the algorithm used.
 %%----------------------------------------------------------------------------
 
--module(dk_stem_nl).
+-module(doko_stemming_nl).
 -include("../../doko_utf8/include/doko_utf8.hrl").
 
 %% API

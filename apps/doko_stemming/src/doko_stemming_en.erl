@@ -6,7 +6,7 @@
 %% @end
 %%----------------------------------------------------------------------------
 
--module(dk_stem_en).
+-module(doko_stemming_en).
 -include("../../doko_utf8/include/doko_utf8.hrl").
 
 %% API
