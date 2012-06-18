@@ -1,0 +1,7 @@
+%% -*- mode: erlang; fill-column: 78; -*-
+
+{application,doko_preprocessing,
+ [{description,"Preprocessing Library"},
+  {vsn,"0.1"},
+  {applications,[kernel,stdlib]},
+  {env,[]}]}.

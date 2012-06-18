@@ -1,7 +1,0 @@
-%% -*- mode: erlang; fill-column: 78; -*-
-
-{application, dk_utf8,
- [{description, "UTF-8 utils"},
-  {vsn, "0.1"},
-  {applications, [kernel, stdlib]},
-  {env, []}]}.

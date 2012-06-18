@@ -1,0 +1,9 @@
+%% -*- mode: erlang; fill-column: 78; -*-
+
+{application,doko_index,
+ [{description,"Doko Inverted Index"},
+  {vsn,"0.1"},
+  {registered,[doko_index_sup,doko_index_registry_sup,doko_index_term_sup]},
+  {applications,[kernel,stdlib]},
+  {mod,{doko_index_app,[]}} ,
+  {env,[]}]}.

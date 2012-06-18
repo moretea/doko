@@ -1,0 +1,7 @@
+%% -*- mode: erlang; fill-column: 78; -*-
+
+{application,doko_stemming,
+ [{description,"Stemming Library"},
+  {vsn,"0.1"},
+  {applications,[kernel,stdlib]},
+  {env,[]}]}.
