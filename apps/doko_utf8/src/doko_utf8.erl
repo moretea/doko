@@ -28,10 +28,10 @@ has_mb_char(Str) ->
 -spec suffix(utf8_string(), utf8_string()) -> boolean().
 suffix(Suffix, Str) ->
     Xiffus = reverse(Suffix),
-    Gnirts = reverse(Str),
+    Rts = reverse(Str),
     L = erlang:length(binary:bin_to_list(Suffix)),
-    case Gnirts of
-        <<Xiffus:L/bytes, _/bytes>> -> true;
+    case Rts of
+        <<Xiffus:L/bytes,_/bytes>> -> true;
         _ -> false
     end.
 
