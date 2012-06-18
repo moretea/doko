@@ -5,7 +5,7 @@
 -behaviour(gen_server).
 
 %% API
--export([server/1]).
+-export([server/1,server/2]).
 -export([name/1]).
 -export([start_link/1]).
 
@@ -18,7 +18,10 @@
 %%----------------------------------------------------------------------------
 
 server(Term) ->
-    gen_server:call(name(erlang:phash2(Term, ?SIZE)), {server, Term}).
+    gen_server:call(name(erlang:phash2(Term, ?SIZE)), {server,Term,false}).
+
+server(Term, create) ->
+    gen_server:call(name(erlang:phash2(Term, ?SIZE)), {server,Term,true}).
 
 name(N) ->
     list_to_atom(?MODULE_STRING ++ "[" ++ integer_to_list(N) ++ "]").
@@ -36,12 +39,14 @@ init([]) ->
     {ok,dict:new()}.
 
 %% @private
-handle_call({server, Term}, _From, Dict = State) ->
+handle_call({server,Term,Create}, _From, Dict = State) ->
     {Server,NextState} =
-        case dict:find(Term, Dict) of
+        case {dict:find(Term, Dict),Create} of
             {ok,Value} ->
                 {Value,State};
-            error ->
+            {error,false} ->
+                {undefined,State};
+            {error,true} ->
                 {ok,NewServer} = supervisor:start_child(doko_index_term_sup, []),
                 {NewServer,dict:store(Term, NewServer, Dict)}
         end,

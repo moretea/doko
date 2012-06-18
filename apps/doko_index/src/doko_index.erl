@@ -8,10 +8,13 @@
 %%----------------------------------------------------------------------------
 
 add_doc_id(Term, DocId) ->
-    doko_index_term:add_doc_id(doko_index_registry:server(Term), DocId).
+    doko_index_term:add_doc_id(doko_index_registry:server(Term, create), DocId).
 
 doc_ids(Term) ->
-    doko_index_term:doc_ids(doko_index_registry:server(Term)).
+    case doko_index_registry:server(Term) of
+        undefined -> gb_sets:new();
+        Server    -> doko_index_term:doc_ids(Server)
+    end.
 
 %% Local variables:
 %% mode: erlang
