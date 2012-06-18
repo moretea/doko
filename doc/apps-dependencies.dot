@@ -1,0 +1,10 @@
+digraph g {
+        cluster -> index;
+        "node" -> cluster;
+        "node" -> preprocessing;
+        preprocessing -> stemming;
+        preprocessing -> utf8;
+        query -> cluster;
+        query -> preprocessing;
+        stemming -> utf8;
+}
