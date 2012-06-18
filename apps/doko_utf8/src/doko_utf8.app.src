@@ -1,7 +1,7 @@
 %% -*- mode: erlang; fill-column: 78; -*-
 
-{application, doko_utf8,
- [{description, "UTF-8 utils"},
-  {vsn, "0.1"},
-  {applications, [kernel, stdlib]},
-  {env, []}]}.
+{application,doko_utf8,
+ [{description,"UTF-8 utils"},
+  {vsn,"0.1"},
+  {applications,[kernel,stdlib]},
+  {env,[]}]}.

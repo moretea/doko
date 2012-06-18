@@ -15,8 +15,8 @@ terms(Str, Lang) ->
       plists:map(
         fun (T) -> (list_to_atom("doko_stemming_" ++ Lang)):stem(T) end,
         plists:usort(
-          [T || T <- tokenize(doko_utf8:case_fold(Str), Lang),
-                not(stop_word(T, Lang))]))).
+          [T||T <- tokenize(doko_utf8:case_fold(Str), Lang),
+              not(stop_word(T, Lang))]))).
 
 %%----------------------------------------------------------------------------
 %% Internal functions
@@ -27,9 +27,9 @@ tokenize(Str, Lang) ->
              "en" -> <<"[a-z0-9]+">>;
              "nl" -> unicode:characters_to_binary("[a-z0-9äëïöüáéíóúè]+")
          end,
-    case re:run(Str, RE, [unicode, {capture, all, binary}, global]) of
-        nomatch -> [];
-        {match, Tokens} -> lists:flatten(Tokens)
+    case re:run(Str, RE, [unicode,{capture,all,binary},global]) of
+        {match, Tokens} -> lists:flatten(Tokens);
+        nomatch         -> []
     end.
 
 stop_word(Token, Lang) ->
