@@ -1,13 +1,13 @@
 -module(doko_cluster).
 
 %% API
--export([start/1, stop/0]).
+-export([start/1,stop/0]).
 
 %%----------------------------------------------------------------------------
 %% API
 %%----------------------------------------------------------------------------
 
-%% Starts as part of a cluster.
+%% @doc Starts the application.
 start(Nodes) ->
     application:set_env(doko_cluster, nodes, Nodes),
     application:start(doko_cluster).
