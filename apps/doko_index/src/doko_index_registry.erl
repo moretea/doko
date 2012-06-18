@@ -47,7 +47,8 @@ handle_call({server,Term,Create}, _From, Dict = State) ->
             {error,false} ->
                 {undefined,State};
             {error,true} ->
-                {ok,NewServer} = supervisor:start_child(doko_index_term_sup, []),
+                {ok,NewServer} =
+                    supervisor:start_child(doko_index_term_sup, []),
                 {NewServer,dict:store(Term, NewServer, Dict)}
         end,
     {reply,Server,NextState};
