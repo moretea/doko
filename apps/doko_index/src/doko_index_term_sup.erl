@@ -14,16 +14,16 @@
 %%----------------------------------------------------------------------------
 
 start_link() ->
-    supervisor:start_link({local, ?MODULE}, ?MODULE, []).
+    supervisor:start_link({local,?MODULE}, ?MODULE, []).
 
 %%----------------------------------------------------------------------------
 %% supervisor callbacks
 %%----------------------------------------------------------------------------
 
 init([]) ->
-    {ok, {{simple_one_for_one, 0, 1},
-          [{doko_index_term, {doko_index_term, start_link, []},
-            temporary, brutal_kill, worker, [doko_index_term]}]}}.
+    {ok,{{simple_one_for_one,0,1},
+          [{doko_index_term,{doko_index_term,start_link,[]},
+            temporary,brutal_kill,worker,[doko_index_term]}]}}.
 
 %% Local variables:
 %% mode: erlang

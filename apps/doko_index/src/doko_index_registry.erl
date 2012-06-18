@@ -1,5 +1,5 @@
 %% @private
--module(doko_index_reg).
+-module(doko_index_registry).
 -include("doko_index.hrl").
 
 -behaviour(gen_server).
@@ -10,7 +10,7 @@
 -export([start_link/1]).
 
 %% gen_server callbacks
--export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2,
+-export([init/1,handle_call/3,handle_cast/2,handle_info/2,terminate/2,
          code_change/3]).
 
 %%----------------------------------------------------------------------------
@@ -24,7 +24,7 @@ name(N) ->
     list_to_atom(?MODULE_STRING ++ "[" ++ integer_to_list(N) ++ "]").
 
 start_link(Name) ->
-    gen_server:start_link({local, Name}, ?MODULE, [], []).
+    gen_server:start_link({local,Name}, ?MODULE, [], []).
 
 
 %%----------------------------------------------------------------------------
@@ -33,30 +33,30 @@ start_link(Name) ->
 
 %% @private
 init([]) ->
-    {ok, dict:new()}.
+    {ok,dict:new()}.
 
 %% @private
 handle_call({server, Term}, _From, Dict = State) ->
-    {Server, NextState} =
+    {Server,NextState} =
         case dict:find(Term, Dict) of
-            {ok, Value} ->
-                {Value, State};
+            {ok,Value} ->
+                {Value,State};
             error ->
-                {ok, NewServer} = supervisor:start_child(doko_index_term_sup, []),
-                {NewServer, dict:store(Term, NewServer, Dict)}
+                {ok,NewServer} = supervisor:start_child(doko_index_term_sup, []),
+                {NewServer,dict:store(Term, NewServer, Dict)}
         end,
-    {reply, Server, NextState};
+    {reply,Server,NextState};
 handle_call(_Request, _From, State) ->
     Reply = ok,
-    {reply, Reply, State}.
+    {reply,Reply,State}.
 
 %% @private
 handle_cast(_Msg, State) ->
-    {noreply, State}.
+    {noreply,State}.
 
 %% @private
 handle_info(_Info, State) ->
-    {noreply, State}.
+    {noreply,State}.
 
 %% @private
 terminate(_Reason, _State) ->
@@ -64,7 +64,7 @@ terminate(_Reason, _State) ->
 
 %% @private
 code_change(_OldVsn, State, _Extra) ->
-    {ok, State}.
+    {ok,State}.
 
 %% Local variables:
 %% mode: erlang
