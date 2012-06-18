@@ -31,14 +31,15 @@ execute(Str) ->
     %% translate keywords to terms
     UniqueKeywords =
         lists:usort(lists:flatten([Xs++Ys||{Xs,Ys} <- Clauses])),
-    Translate = fun (Keyword) ->
-                        %% FIXME: hardcoded language
-                        Result = case dk_pp:terms(Keyword, "en") of
-                                     []    -> stop_word;
-                                     Terms -> Terms
-                                 end,
-                        {Keyword,Result}
-                end,
+    Translate =
+        fun (Keyword) ->
+                %% FIXME: hardcoded language
+                Result = case doko_preprocessing:terms(Keyword, "en") of
+                             []    -> stop_word;
+                             Terms -> Terms
+                         end,
+                {Keyword,Result}
+        end,
     Terms = dict:from_list(lists:map(Translate, UniqueKeywords)),
     %% fetch data
     Fetch = fun (Term) ->

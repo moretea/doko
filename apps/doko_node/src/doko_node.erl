@@ -39,7 +39,7 @@ add_docs(Binary) ->
     [Id, Text] = binary:split(Line, <<" ">>),
     IntId = list_to_integer(binary_to_list(Id)),
     plists:foreach(fun (T) -> doko_index:add_doc_id(T, IntId) end,
-                   dk_pp:terms(Text, "en")),
+                   doko_preprocessing:terms(Text, "en")),
     add_docs(Rest).
 
 %% Local variables:

@@ -1,7 +1,7 @@
 %% -*- mode: erlang; fill-column: 78; -*-
 
-{application, dk_pp,
- [{description, "Preprocessing library"},
+{application, doko_preprocessing,
+ [{description, "Preprocessing Library"},
   {vsn, "0.1"},
   {applications, [kernel, stdlib]},
   {env, []}]}.

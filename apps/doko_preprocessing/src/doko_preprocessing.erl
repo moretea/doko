@@ -1,4 +1,4 @@
--module(dk_pp).
+-module(doko_preprocessing).
 -include("../../doko_utf8/include/doko_utf8.hrl").
 
 %% API
