@@ -1,21 +1,15 @@
 -module(doko_node).
 
 %% API
--export([start/0, start/1, stop/0]).
+-export([start/0,stop/0]).
 -export([load/1]).
 
 %%----------------------------------------------------------------------------
 %% API
 %%----------------------------------------------------------------------------
 
-%% Starts a node in stand-alone mode.
+%% @doc Starts a node.
 start() ->
-    application:set_env(doko_node, nodes, [node()]),
-    application:start(doko_node).
-
-%% Starts a node as part of a cluster.
-start(Nodes) ->
-    application:set_env(doko_node, nodes, Nodes),
     application:start(doko_node).
 
 %% @doc Stops the node.
@@ -23,7 +17,7 @@ stop() ->
     application:stop(doko_node).
 
 load(File) ->
-    {ok, Binary} = file:read_file(File),
+    {ok,Binary} = file:read_file(File),
     add_docs(Binary),
     ok.
 
