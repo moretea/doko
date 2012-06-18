@@ -1,0 +1,10 @@
+%% -*- mode: erlang; fill-column: 78; -*-
+
+{application,doko_cluster,
+ [{description,"Doko Cluster App"},
+  {vsn,"0.1"},
+  {registered,[]},
+  {applications,[kernel,stdlib]},
+  {mod,{doko_cluster_app,[]}},
+  {included_applications,[]},
+  {env,[]}]}.
