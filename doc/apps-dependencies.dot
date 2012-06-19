@@ -1,6 +1,7 @@
 digraph g {
         cluster -> "node";
-        cluster -> preprocessing;
+        ingest -> preprocessing;
+        ingest -> cluster;
         "node" -> index;
         preprocessing -> stemming;
         preprocessing -> utf8;

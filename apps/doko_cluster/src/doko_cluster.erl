@@ -12,7 +12,7 @@
 %%----------------------------------------------------------------------------
 
 %% @doc Adds a document.
-add_doc(DocId, Text) ->
+add_doc(DocId, Terms) ->
     AddDocId =
         fun (Term) ->
                 %% TODO: choose appropriate timeout
@@ -22,8 +22,7 @@ add_doc(DocId, Text) ->
                                        doko_node, add_doc_id, [Term, DocId],
                                        Timeout)
         end,
-    %% FIXME: hardcoded language
-    plists:foreach(AddDocId, doko_preprocessing:terms(Text, "en")).
+    plists:foreach(AddDocId, Terms).
 
 doc_ids(Term) ->
     %% TODO: choose appropriate timeout
