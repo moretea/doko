@@ -1,12 +1,16 @@
 -module(doko_node).
 
 %% API
+-export([add_doc_id/2]).
 -export([start/0,stop/0]).
--export([load/1]).
+%% -export([load/1]).
 
 %%----------------------------------------------------------------------------
 %% API
 %%----------------------------------------------------------------------------
+
+add_doc_id(Term, DocId) ->
+    doko_index:add_doc_id(Term, DocId).
 
 %% @doc Starts a node.
 start() ->
@@ -16,25 +20,25 @@ start() ->
 stop() ->
     application:stop(doko_node).
 
-load(File) ->
-    {ok,Binary} = file:read_file(File),
-    add_docs(Binary),
-    ok.
+%% load(File) ->
+%%     {ok,Binary} = file:read_file(File),
+%%     add_docs(Binary),
+%%     ok.
 
 %%----------------------------------------------------------------------------
 %% Internal functions
 %%----------------------------------------------------------------------------
 
-add_docs(<<>>) ->
-    ok;
-add_docs(Binary) ->
-    [Line,Rest] = binary:split(Binary, <<"\n">>), % does this work correctly
-                                                  % with UTF-8?
-    [Id,Text] = binary:split(Line, <<" ">>),
-    IntId = list_to_integer(binary_to_list(Id)),
-    plists:foreach(fun (T) -> doko_index:add_doc_id(T, IntId) end,
-                   doko_preprocessing:terms(Text, "en")),
-    add_docs(Rest).
+%% add_docs(<<>>) ->
+%%     ok;
+%% add_docs(Binary) ->
+%%     [Line,Rest] = binary:split(Binary, <<"\n">>), % does this work correctly
+%%                                                   % with UTF-8?
+%%     [Id,Text] = binary:split(Line, <<" ">>),
+%%     IntId = list_to_integer(binary_to_list(Id)),
+%%     plists:foreach(fun (T) -> doko_index:add_doc_id(T, IntId) end,
+%%                    doko_preprocessing:terms(Text, "en")),
+%%     add_docs(Rest).
 
 %% Local variables:
 %% mode: erlang

@@ -1,23 +1,34 @@
 -module(doko_cluster).
 
 %% API
-%% -export([add_doc/2]).
+-export([add_doc/2]).
 -export([start/1,stop/0]).
--export([whereto/1,wherefrom/1]).
 
--define(RING_SIZE, 420).
--define(N_DUPS, 2).
+-define(RING_SIZE, 420). % number of virtual nodes
+-define(N_DUPS, 2). % number of duplicates
 
 %%----------------------------------------------------------------------------
 %% API
 %%----------------------------------------------------------------------------
 
 %% @doc Adds a document.
-%% add_doc(_DocId, _Text) ->
+add_doc(DocId, Text) ->
+    AddDocId =
+        fun (Term) ->
+                %% TODO: choose appropriate timeout
+                Timeout = infinity,
+                %% TODO: handle errors
+                {_,[]} = rpc:multicall(write_nodes(Term),
+                                       doko_node, add_doc_id, [Term, DocId],
+                                       Timeout)
+        end,
+    %% FIXME: hardcoded language
+    plists:foreach(AddDocId, doko_preprocessing:terms(Text, "en")).
 
 %% @doc Starts the application.
 start(Nodes) ->
-    %% TODO: check if number of nodes is greater than number of duplicates
+    %% TODO: check if number of nodes is at least equal to number of
+    %% duplicates
     application:set_env(doko_cluster, nodes, Nodes),
     application:start(doko_cluster).
 
@@ -29,13 +40,13 @@ stop() ->
 %% Internal functions
 %%----------------------------------------------------------------------------
 
-whereto(Term) ->
+write_nodes(Term) ->
     {ok, Nodes} = application:get_env(doko_cluster, nodes),
     lists:sublist(Nodes ++ Nodes, node_index(Term, Nodes), ?N_DUPS).
 
-wherefrom(Term) ->
-    {ok, Nodes} = application:get_env(doko_cluster, nodes),
-    lists:nth(node_index(Term, Nodes), Nodes).
+%% read_node(Term) ->
+%%     {ok, Nodes} = application:get_env(doko_cluster, nodes),
+%%     lists:nth(node_index(Term, Nodes), Nodes).
 
 node_index(Term, Nodes) ->
     Vnode = erlang:phash2(Term, ?RING_SIZE),
