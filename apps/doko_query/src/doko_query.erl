@@ -43,7 +43,7 @@ execute(Str) ->
     Terms = dict:from_list(lists:map(Translate, UniqueKeywords)),
     %% fetch data
     Fetch = fun (Term) ->
-                    DocIds = doko_index:doc_ids(Term),
+                    DocIds = doko_cluster:doc_ids(Term),
                     {Term,DocIds}
             end,
     UniqueTerms = 

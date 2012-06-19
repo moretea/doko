@@ -42,7 +42,7 @@ init([]) ->
 handle_call({server,Term,Create}, _From, Dict = State) ->
     {Server,NextState} =
         case {dict:find(Term, Dict),Create} of
-            {ok,Value} ->
+            {{ok,Value},_} ->
                 {Value,State};
             {error,false} ->
                 {undefined,State};
