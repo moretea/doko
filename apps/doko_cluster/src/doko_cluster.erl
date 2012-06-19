@@ -1,7 +1,7 @@
 -module(doko_cluster).
 
 %% API
--export([add_doc/2]).
+-export([add_doc/2,doc_ids/1]).
 -export([start/1,stop/0]).
 
 -define(RING_SIZE, 420). % number of virtual nodes
@@ -25,6 +25,12 @@ add_doc(DocId, Text) ->
     %% FIXME: hardcoded language
     plists:foreach(AddDocId, doko_preprocessing:terms(Text, "en")).
 
+doc_ids(Term) ->
+    %% TODO: choose appropriate timeout
+    Timeout = infinity,
+    %% TODO: handle errors
+    rpc:call(read_node(Term), doko_node, doc_ids, [Term], Timeout).
+
 %% @doc Starts the application.
 start(Nodes) ->
     %% TODO: check if number of nodes is at least equal to number of
@@ -44,9 +50,9 @@ write_nodes(Term) ->
     {ok, Nodes} = application:get_env(doko_cluster, nodes),
     lists:sublist(Nodes ++ Nodes, node_index(Term, Nodes), ?N_DUPS).
 
-%% read_node(Term) ->
-%%     {ok, Nodes} = application:get_env(doko_cluster, nodes),
-%%     lists:nth(node_index(Term, Nodes), Nodes).
+read_node(Term) ->
+    {ok, Nodes} = application:get_env(doko_cluster, nodes),
+    lists:nth(node_index(Term, Nodes), Nodes).
 
 node_index(Term, Nodes) ->
     Vnode = erlang:phash2(Term, ?RING_SIZE),

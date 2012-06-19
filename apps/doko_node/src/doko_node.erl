@@ -1,7 +1,7 @@
 -module(doko_node).
 
 %% API
--export([add_doc_id/2]).
+-export([add_doc_id/2,doc_ids/1]).
 -export([start/0,stop/0]).
 %% -export([load/1]).
 
@@ -11,6 +11,9 @@
 
 add_doc_id(Term, DocId) ->
     doko_index:add_doc_id(Term, DocId).
+
+doc_ids(Term) ->
+    doko_index:doc_ids(Term).
 
 %% @doc Starts a node.
 start() ->
