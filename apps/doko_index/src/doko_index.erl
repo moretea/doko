@@ -8,7 +8,8 @@
 %%----------------------------------------------------------------------------
 
 add_doc_id(Term, DocId) ->
-    doko_index_term:add_doc_id(doko_index_registry:server(Term, create), DocId).
+    doko_index_term:add_doc_id(doko_index_registry:server(Term, create),
+                               DocId).
 
 doc_ids(Term) ->
     case doko_index_registry:server(Term) of
