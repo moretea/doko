@@ -6,6 +6,7 @@
 /apps/*/.eunit/*
 /apps/*/doc/*
 !/apps/*/doc/overview.edoc
+/apps/*/logs/*
 /apps/doko_query/src/doko_query_parser.erl
 /data/
 /deps/

@@ -1,4 +1,4 @@
--module(dk_stem_SUITE).
+-module(doko_stemming_SUITE).
 -include_lib("common_test/include/ct.hrl").
 
 %% Tests
@@ -25,13 +25,16 @@ test_nl(Config) ->
 %%----------------------------------------------------------------------------
 
 all() ->
-    [{group, integration_tests}].
+    [{group,integration_tests}].
 
 groups() ->
     [{integration_tests, [parallel], [test_en, test_nl]}].
 
 
 init_per_group(_GroupName, Config) ->
+    {ok,Dir} = file:get_cwd(),
+    ct:log(io_lib:format("Dir = ~p", [Dir])),
+    true = code:add_path("../../../doko_utf8/ebin"),
     Config.
 
 end_per_group(_GroupName, _Config) ->
@@ -43,12 +46,12 @@ end_per_group(_GroupName, _Config) ->
 
 vocab_stemmed(Lang, Config) ->
     DataDir = ?config(data_dir, Config),
-    {ok, Binary} =
+    {ok,Binary} =
         file:read_file(DataDir ++ "vocabulary_stemmed_" ++ Lang ++ ".txt"),
     Lines = re:split(Binary, <<"\n">>, [trim]),
-    {ok, Re} = re:compile(<<"^([^ ]*) *([^ ]*)$">>, [unicode]),
-    Options = [{capture, all_but_first, binary}],
-    Mod = list_to_atom("dk_stem_" ++ Lang),
+    {ok,Re} = re:compile(<<"^([^ ]*) *([^ ]*)$">>, [unicode]),
+    Options = [{capture,all_but_first,binary}],
+    Mod = list_to_atom("doko_stemming_" ++ Lang),
     lists:foreach(
       fun(Line) ->
               {match, [Word, Stem]} = re:run(Line, Re, Options),
