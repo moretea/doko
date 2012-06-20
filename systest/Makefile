@@ -1,8 +1,8 @@
 default:
-	erlc -W test_utils.erl
+	erlc -W systest.erl
 
 clean:
 	@rm -Rf logs/* *SUITE.beam
 
 realclean: clean
-	@rm -f test_utils.beam
+	@rm -f systest.erl
