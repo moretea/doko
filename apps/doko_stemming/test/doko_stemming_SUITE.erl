@@ -6,7 +6,6 @@
 
 %% CT functions
 -export([all/0, groups/0]).
--export([init_per_group/2, end_per_group/2]).
 
 %%----------------------------------------------------------------------------
 %% Tests
@@ -25,20 +24,10 @@ test_nl(Config) ->
 %%----------------------------------------------------------------------------
 
 all() ->
-    [{group,integration_tests}].
+    [{group,default}].
 
 groups() ->
-    [{integration_tests, [parallel], [test_en, test_nl]}].
-
-
-init_per_group(_GroupName, Config) ->
-    {ok,Dir} = file:get_cwd(),
-    ct:log(io_lib:format("Dir = ~p", [Dir])),
-    true = code:add_path("../../../doko_utf8/ebin"),
-    Config.
-
-end_per_group(_GroupName, _Config) ->
-    ok.
+    [{default,[parallel],[test_en, test_nl]}].
 
 %%----------------------------------------------------------------------------
 %% Internal functions
