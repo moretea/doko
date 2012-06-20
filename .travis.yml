@@ -1,5 +1,5 @@
 language: erlang
-script: rebar get-deps && make test
+script: make test
 otp_release:
   - R15B01
   - R15B
