@@ -54,7 +54,7 @@ execute(Str) ->
     DocIds = fun (Keyword) ->
                      case dict:fetch(Keyword, Terms) of
                          stop_word ->
-                             gb_sets:new();
+                             gb_sets:empty();
                          Result ->
                              [dict:fetch(X,Data)||X <- Result]
                      end
