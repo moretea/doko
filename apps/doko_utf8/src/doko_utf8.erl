@@ -1,8 +1,5 @@
 -module(doko_utf8).
 -include("../include/doko_utf8.hrl").
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
--endif.
 -compile({no_auto_import,[length/1]}).
 
 %% API
@@ -1134,44 +1131,6 @@ char_fold(C) ->
         16#10427 -> 16#1044F;
         C        -> C
     end.
-
-%%----------------------------------------------------------------------------
-%% Tests
-%%----------------------------------------------------------------------------
-
--ifdef(TEST).
-
-length_test() ->
-    Word = unicode:characters_to_binary("à", latin1),
-    ?assertEqual(1, length(Word)).
-
-has_mb_char_test_() ->
-    Phrase = unicode:characters_to_binary("prêt-à-porter", latin1),
-    [?_assert(has_mb_char(Phrase)),
-     ?_assert(not has_mb_char(<<"au bain marie">>))].
-
-suffix_test_() ->
-    Phrase = unicode:characters_to_binary("à la carte", latin1),
-    [?_assert(suffix(<<"carte">>, Phrase)),
-     ?_assert(not suffix(<<"card">>, Phrase))].
-
-reverse_test() ->
-    Word = unicode:characters_to_binary("prêt-à-porter", latin1),
-    Drow = unicode:characters_to_binary("retrop-à-têrp", latin1),
-    ?assertEqual(Drow, reverse(Word)).
-
-substr_test_() ->
-    Phrase = unicode:characters_to_binary("à la carte", latin1),
-    %%                                     0123456789
-    %%                                      987654321
-    [?_assertEqual(<<"la carte">>, substr(Phrase, 2)),
-     ?_assertEqual(<<"la">>, substr(Phrase, 2, 2)),
-     ?_assertEqual(<<"carte">>, substr(Phrase, -5)),
-     ?_assertEqual(<<" la ">>, substr(Phrase, 1, -5)),
-     ?_assertEqual(<<"r">>, substr(Phrase, -3, -2)),
-     ?_assertEqual(<<>>, substr(Phrase, -2, -3))].
-
--endif.
 
 %% Local variables:
 %% mode: erlang
