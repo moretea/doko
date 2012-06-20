@@ -13,7 +13,7 @@ add_doc_id(Term, DocId) ->
 
 doc_ids(Term) ->
     case doko_index_registry:server(Term) of
-        undefined -> gb_sets:new();
+        undefined -> gb_sets:empty();
         Server    -> doko_index_term:doc_ids(Server)
     end.
 

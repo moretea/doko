@@ -32,7 +32,7 @@ start_link() ->
 
 %% @private
 init([]) ->
-    {ok,gb_sets:new()}.
+    {ok,gb_sets:empty()}.
 
 %% @private
 handle_call(get, _Client, Set = State) ->
