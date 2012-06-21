@@ -2,7 +2,7 @@
 -include_lib("common_test/include/ct.hrl").
 
 %% Tests
--export([test_queries/1,test_replication/1]).
+-export([test_queries/1,test_replication/1,test_redundancy/1]).
 
 %% CT functions
 -export([all/0, groups/0]).
@@ -39,6 +39,19 @@ test_replication(_Config) ->
     3 = length(lists:filter(fun gb_sets:is_empty/1, Result)),
     ok.
 
+test_redundancy(_Config) ->
+    Nodes = test_nodes(),
+    %% add document
+    ok = rpc:call(random(Nodes), doko_ingest, add_doc, [1,<<"hello world">>]),
+    %% stop one of the nodes that has the data
+    [Node|_] = rpc:call(random(Nodes), doko_cluster, where, [<<"hello">>]),
+    slave:stop(Node),
+    %% execute query and check result
+    Result = rpc:call(random(lists:delete(Node, Nodes)),
+                      doko_query, execute, [<<"hello">>]),
+    [1] = gb_sets:to_list(Result),
+    ok.
+
 %%----------------------------------------------------------------------------
 %% CT functions
 %%----------------------------------------------------------------------------
@@ -47,7 +60,7 @@ all() ->
     [{group,systest}].
 
 groups() ->
-    [{systest,[test_queries,test_replication]}].
+    [{systest,[test_queries,test_replication,test_redundancy]}].
 
 init_per_suite(Config) ->
     Nodes = test_nodes(),
@@ -76,12 +89,15 @@ init_per_testcase(_TestCase, Config) ->
     %% ready
     Config.
 
-end_per_testcase(_TestCase, _Config) ->
+end_per_testcase(TestCase, _Config) ->
     Nodes = test_nodes(),
     %% stop doko on test nodes
-    Result = lists:duplicate(length(Nodes), ok),
-    {Result,[]} = rpc:multicall(Nodes, doko_cluster, stop, []),
-    {Result,[]} = rpc:multicall(Nodes, doko_node, stop, []),
+    Result = case TestCase of
+                 test_redundancy -> lists:duplicate(length(Nodes) - 1, ok);
+                 _               -> lists:duplicate(length(Nodes), ok)
+             end,
+    {Result,_} = rpc:multicall(Nodes, doko_cluster, stop, []),
+    {Result,_} = rpc:multicall(Nodes, doko_node, stop, []),
     %% %% ready
     ok.
 

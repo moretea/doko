@@ -3,6 +3,7 @@
 %% API
 -export([add_doc/2,doc_ids/1]).
 -export([start/1,stop/0]).
+-export([where/1]).
 
 -define(RING_SIZE, 420). % number of virtual nodes
 -define(N_DUPS, 2). % number of duplicates
@@ -18,17 +19,14 @@ add_doc(DocId, Terms) ->
                 %% TODO: choose appropriate timeout
                 Timeout = infinity,
                 %% TODO: handle errors
-                {_,[]} = rpc:multicall(write_nodes(Term),
+                {_,[]} = rpc:multicall(where(Term),
                                        doko_node, add_doc_id, [Term, DocId],
                                        Timeout)
         end,
     plists:foreach(AddDocId, Terms).
 
 doc_ids(Term) ->
-    %% TODO: choose appropriate timeout
-    Timeout = infinity,
-    %% TODO: handle errors
-    rpc:call(read_node(Term), doko_node, doc_ids, [Term], Timeout).
+    get_doc_ids(Term).
 
 %% @doc Starts the application.
 start(Nodes) ->
@@ -45,17 +43,56 @@ stop() ->
 %% Internal functions
 %%----------------------------------------------------------------------------
 
-write_nodes(Term) ->
+where(Term) ->
     {ok, Nodes} = application:get_env(doko_cluster, nodes),
-    lists:sublist(Nodes ++ Nodes, node_index(Term, Nodes), ?N_DUPS).
-
-read_node(Term) ->
-    {ok, Nodes} = application:get_env(doko_cluster, nodes),
-    lists:nth(node_index(Term, Nodes), Nodes).
-
-node_index(Term, Nodes) ->
     Vnode = erlang:phash2(Term, ?RING_SIZE),
-    1 + erlang:trunc((Vnode / ?RING_SIZE) * length(Nodes)).
+    Start = 1 + erlang:trunc((Vnode / ?RING_SIZE) * length(Nodes)),
+    lists:sublist(Nodes ++ Nodes, Start, ?N_DUPS).
+
+get_doc_ids(Term) ->
+    Caller = self(),
+    Tag = make_ref(),
+    Receiver = doc_ids_receiver(Caller, Tag, Term),
+    Mref = monitor(process, Receiver),
+    Receiver ! {Caller,Tag},
+    receive
+        {'DOWN',Mref,_,_,{Receiver,Tag,Result}} ->
+            Result;
+        {'DOWN',Mref,_,_,Reason} ->
+            %% receiver code failed
+            exit(Reason)
+    end.
+
+doc_ids_receiver(Caller, Tag, Term) ->
+    spawn(
+      fun () ->
+              process_flag(trap_exit, true),
+              Mref = monitor(process, Caller),
+              receive
+                  {'DOWN',Mref,_,_,_} ->
+                      %% caller died before sending us the go-ahead
+                      exit(normal);
+                  {Caller,Tag} ->
+                      Keys = lists:map(
+                               fun (Node) ->
+                                       rpc:async_call(Node,
+                                                      doko_node, doc_ids,
+                                                      [Term])
+                               end,
+                               where(Term)),
+                      Result = yield(Keys, 1, length(Keys)),
+                      exit({self(),Tag,Result})
+              end
+      end).
+
+yield(Keys, Index, Length) ->
+    case rpc:nb_yield(lists:nth(Index, Keys)) of
+        {value,Value} -> Value;
+        timeout       -> case Index of
+                             Length -> yield(Keys, 1, Length);
+                             _      -> yield(Keys, Index + 1, Length)
+                         end
+    end.
 
 %% Local variables:
 %% mode: erlang
