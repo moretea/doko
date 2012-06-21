@@ -2,7 +2,7 @@
 -include_lib("common_test/include/ct.hrl").
 
 %% Tests
--export([test/1]).
+-export([test_queries/1,test_replication/1]).
 
 %% CT functions
 -export([all/0, groups/0]).
@@ -13,7 +13,7 @@
 %% Tests
 %%----------------------------------------------------------------------------
 
-test(_Config) ->
+test_queries(_Config) ->
     Nodes = test_nodes(),
     %% add documents
     ok = rpc:call(random(Nodes),
@@ -22,15 +22,21 @@ test(_Config) ->
                   doko_ingest, add_doc, [2,<<"goodbye world">>]),
     ok = rpc:call(random(Nodes),
                   doko_ingest, add_doc, [3,<<"aloha world">>]),
-    %% check distribution/replication
-    {Result1,[]} = rpc:multicall(Nodes, doko_index, doc_ids, [<<"hello">>]),
-    3 = length(lists:filter(fun gb_sets:is_empty/1, Result1)),
     %% test queries
-    Result2 = rpc:call(random(Nodes), doko_query, execute, [<<"aloha">>]),
-    [3] = gb_sets:to_list(Result2),
-    Result3 = rpc:call(random(Nodes), doko_query, execute,
+    Result1 = rpc:call(random(Nodes), doko_query, execute, [<<"aloha">>]),
+    [3] = gb_sets:to_list(Result1),
+    Result2 = rpc:call(random(Nodes), doko_query, execute,
                        [<<"(hello | goodbye) & world & !aloha">>]),
-    [1,2] = lists:sort(gb_sets:to_list(Result3)),
+    [1,2] = lists:sort(gb_sets:to_list(Result2)),
+    ok.
+
+test_replication(_Config) ->
+    Nodes = test_nodes(),
+    %% add document
+    ok = rpc:call(random(Nodes), doko_ingest, add_doc, [1,<<"hello world">>]),
+    %% test replication
+    {Result,[]} = rpc:multicall(Nodes, doko_index, doc_ids, [<<"hello">>]),
+    3 = length(lists:filter(fun gb_sets:is_empty/1, Result)),
     ok.
 
 %%----------------------------------------------------------------------------
@@ -41,7 +47,7 @@ all() ->
     [{group,systest}].
 
 groups() ->
-    [{systest,[test]}].
+    [{systest,[test_queries,test_replication]}].
 
 init_per_suite(Config) ->
     Nodes = test_nodes(),
