@@ -4,7 +4,7 @@
 -behaviour(gen_server).
 
 %% API
--export([add_doc_id/2,doc_ids/1]).
+-export([add_doc_id/2,del_doc_id/2,doc_ids/1]).
 -export([start_link/0]).
 
 %% gen_server callbacks
@@ -19,6 +19,12 @@
 
 add_doc_id(Server, DocId) ->
     gen_server:cast(Server, {add,DocId}).
+
+del_doc_id(Server, DocId) ->
+    case Server of
+        undefined -> ok;
+        _         -> gen_server:cast(Server, {del,DocId})
+    end.
 
 doc_ids(Server) ->
     gen_server:call(Server, get).
@@ -43,7 +49,10 @@ handle_call(_Request, _Client, State) ->
 
 %% @private
 handle_cast({add,DocId}, Set = _State) ->
-    NextState = gb_sets:insert(DocId, Set),
+    NextState = gb_sets:add_element(DocId, Set),
+    {noreply,NextState};
+handle_cast({del,DocId}, Set = _State) ->
+    NextState = gb_sets:del_element(DocId, Set),
     {noreply,NextState};
 handle_cast(_Msg, State) ->
     {noreply,State}.

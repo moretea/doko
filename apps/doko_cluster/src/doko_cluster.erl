@@ -1,7 +1,7 @@
 -module(doko_cluster).
 
 %% API
--export([add_doc/2,doc_ids/1]).
+-export([add_doc/2,del_doc/2,doc_ids/1]).
 -export([start/1,stop/0]).
 -export([where/1]).
 
@@ -14,16 +14,11 @@
 
 %% @doc Adds a document.
 add_doc(DocId, Terms) ->
-    AddDocId =
-        fun (Term) ->
-                %% TODO: choose appropriate timeout
-                Timeout = infinity,
-                %% TODO: handle errors
-                {_,[]} = rpc:multicall(where(Term),
-                                       doko_node, add_doc_id, [Term, DocId],
-                                       Timeout)
-        end,
-    plists:foreach(AddDocId, Terms).
+    foreach_term(add_doc_id, DocId, Terms).
+
+%% @doc Deletes a document.
+del_doc(DocId, Terms) ->
+    foreach_term(del_doc_id, DocId, Terms).
 
 doc_ids(Term) ->
     get_doc_ids(Term).
@@ -48,6 +43,17 @@ where(Term) ->
     Vnode = erlang:phash2(Term, ?RING_SIZE),
     Start = 1 + erlang:trunc((Vnode / ?RING_SIZE) * length(Nodes)),
     lists:sublist(Nodes ++ Nodes, Start, ?N_DUPS).
+
+foreach_term(Fun, DocId, Terms) ->
+    plists:foreach(
+      fun (Term) ->
+              %% TODO: choose appropriate timeout
+              Timeout = infinity,
+              %% TODO: handle errors
+              {_,_} = rpc:multicall(where(Term),
+                                    doko_node, Fun, [Term, DocId], Timeout)
+      end,
+      Terms).
 
 get_doc_ids(Term) ->
     Caller = self(),

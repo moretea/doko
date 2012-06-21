@@ -2,7 +2,7 @@
 -include_lib("common_test/include/ct.hrl").
 
 %% Tests
--export([test_queries/1,test_replication/1,test_redundancy/1]).
+-export([test_queries/1,test_replication/1,test_redundancy/1,test_del_doc/1]).
 
 %% CT functions
 -export([all/0, groups/0]).
@@ -39,6 +39,23 @@ test_replication(_Config) ->
     3 = length(lists:filter(fun gb_sets:is_empty/1, Result)),
     ok.
 
+test_del_doc(_Config) ->
+    Nodes = test_nodes(),
+    %% add document
+    ok = rpc:call(random(Nodes), doko_ingest, add_doc, [1,<<"hello world">>]),
+    %% execute query and check result
+    Query = fun () ->
+                    rpc:call(random(Nodes),
+                             doko_query, execute, [<<"hello">>])
+            end,
+    [1] = gb_sets:to_list(Query()),
+    %% delete document
+    ok = rpc:call(random(Nodes), doko_ingest, del_doc, [1,<<"hello world">>]),
+    %% execute query and check result
+    %% Result2 = rpc:call(random(Nodes)), doko_query, execute, [<<"hello">>]),
+    %% true = gb_sets:is_empty(Result2),
+    ok.
+
 test_redundancy(_Config) ->
     Nodes = test_nodes(),
     %% add document
@@ -60,7 +77,7 @@ all() ->
     [{group,systest}].
 
 groups() ->
-    [{systest,[test_queries,test_replication,test_redundancy]}].
+    [{systest,[test_queries,test_replication,test_del_doc,test_redundancy]}].
 
 init_per_suite(Config) ->
     Nodes = test_nodes(),
