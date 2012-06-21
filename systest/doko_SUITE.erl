@@ -52,11 +52,11 @@ test_del_doc(_Config) ->
     %% delete document
     ok = rpc:call(random(Nodes), doko_ingest, del_doc, [1,<<"hello world">>]),
     %% execute query and check result
-    %% Result2 = rpc:call(random(Nodes)), doko_query, execute, [<<"hello">>]),
-    %% true = gb_sets:is_empty(Result2),
+    Result2 = rpc:call(random(Nodes), doko_query, execute, [<<"hello">>]),
+    true = gb_sets:is_empty(Result2),
     ok.
 
-test_redundancy(_Config) ->
+test_redundancy(Config) ->
     Nodes = test_nodes(),
     %% add document
     ok = rpc:call(random(Nodes), doko_ingest, add_doc, [1,<<"hello world">>]),
@@ -64,9 +64,11 @@ test_redundancy(_Config) ->
     [Node|_] = rpc:call(random(Nodes), doko_cluster, where, [<<"hello">>]),
     slave:stop(Node),
     %% execute query and check result
-    Result = rpc:call(random(lists:delete(Node, Nodes)),
+    Result = rpc:call(random(lists:delete(Node,Nodes)),
                       doko_query, execute, [<<"hello">>]),
     [1] = gb_sets:to_list(Result),
+    %% restart node
+    start_node(Node,Config),
     ok.
 
 %%----------------------------------------------------------------------------
@@ -77,22 +79,21 @@ all() ->
     [{group,systest}].
 
 groups() ->
-    [{systest,[test_queries,test_replication,test_del_doc,test_redundancy]}].
+    [{systest,[shuffle,sequence,{repeat,10}],[test_queries,
+                                              test_replication,
+                                              test_del_doc,
+                                              test_redundancy]}].
 
 init_per_suite(Config) ->
     Nodes = test_nodes(),
-    %% (re)start test nodes
-    lists:foreach(fun slave:stop/1, Nodes),
-    lists:foreach(
-      fun (N) -> {ok,_} = slave:start(host(), short_node_name(N)) end,
-      lists:seq(1, length(Nodes))),
-    ct_cover:add_nodes(Nodes),
-    %% set path on test nodes
+    %% put path in config
     Path = code:get_path(),
-    Result = lists:duplicate(length(Nodes), true),
-    {Result,[]} = rpc:multicall(Nodes, code, set_path, [Path]),
+    NewConfig = [{path,Path}|Config],
+    %% (re)start test nodes
+    lists:foreach(fun (Node) -> start_node(Node, NewConfig) end, Nodes),
+    ct_cover:add_nodes(Nodes),
     %% ready
-    Config.
+    NewConfig.
 
 end_per_suite(_Config) ->
     ok.
@@ -101,35 +102,43 @@ init_per_testcase(_TestCase, Config) ->
     Nodes = test_nodes(),
     %% start doko on test nodes
     Result = lists:duplicate(length(Nodes), ok),
-    {Result,[]} = rpc:multicall(Nodes, doko_cluster, start, [test_nodes()]),
     {Result,[]} = rpc:multicall(Nodes, doko_node, start, []),
+    {Result,[]} = rpc:multicall(Nodes, doko_cluster, start, [Nodes]),
     %% ready
     Config.
 
-end_per_testcase(TestCase, _Config) ->
-    Nodes = test_nodes(),
-    %% stop doko on test nodes
-    Result = case TestCase of
-                 test_redundancy -> lists:duplicate(length(Nodes) - 1, ok);
-                 _               -> lists:duplicate(length(Nodes), ok)
-             end,
-    {Result,_} = rpc:multicall(Nodes, doko_cluster, stop, []),
-    {Result,_} = rpc:multicall(Nodes, doko_node, stop, []),
-    %% %% ready
-    ok.
+end_per_testcase(_TestCase, Config) ->
+    case ?config(tc_status, Config) of
+        {failed,_} ->
+            %% leave doko running for inspection
+            ok;
+        ok ->
+            Nodes = test_nodes(),
+            %% stop doko on test nodes
+            {_,_} = rpc:multicall(Nodes, doko_cluster, stop, []),
+            {_,_} = rpc:multicall(Nodes, doko_node, stop, []),
+            %% ready
+            ok
+    end.
+
+start_node(Node, Config) ->
+    slave:stop(Node),
+    {ok,_} = slave:start(host(), short_name(Node)),
+    Path = ?config(path, Config),
+    rpc:call(Node, code, set_path, [Path]).
 
 %%----------------------------------------------------------------------------
 %% Internal functions
 %%----------------------------------------------------------------------------
 
 test_nodes() ->
-    lists:map(fun (N) -> long_node_name(N) end, lists:seq(1, 5)).
+    lists:map(fun (N) -> node_name(N) end, lists:seq(1, 5)).
 
-long_node_name(N) ->
-    list_to_atom(atom_to_list(short_node_name(N)) ++ "@" ++ host()).
+node_name(N) ->
+    list_to_atom("doko_systest_node" ++ integer_to_list(N) ++ "@" ++ host()).
 
-short_node_name(N) ->
-    list_to_atom("node" ++ integer_to_list(N)).
+short_name(Node) ->
+    list_to_atom(lists:takewhile(fun (C) -> C/= $@ end, atom_to_list(Node))).
 
 host() ->
     lists:takewhile(fun (C) -> C /= $. end, net_adm:localhost()).

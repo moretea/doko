@@ -92,12 +92,17 @@ doc_ids_receiver(Caller, Tag, Term) ->
       end).
 
 yield(Keys, Index, Length) ->
-    case rpc:nb_yield(lists:nth(Index, Keys)) of
-        {value,Value} -> Value;
-        timeout       -> case Index of
-                             Length -> yield(Keys, 1, Length);
-                             _      -> yield(Keys, Index + 1, Length)
-                         end
+    Key = lists:nth(Index, Keys),
+    case rpc:nb_yield(Key) of
+        {value,{badrpc,nodedown}} ->
+            yield(lists:delete(Key, Keys), 1, Length - 1);
+        {value,Value} ->
+            Value;
+        timeout ->
+            case Index of
+                Length -> yield(Keys, 1, Length);
+                _      -> yield(Keys, Index + 1, Length)
+            end
     end.
 
 %% Local variables:
