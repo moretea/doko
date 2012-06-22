@@ -2,15 +2,15 @@
 -include("../../doko_utf8/include/doko_utf8.hrl").
 
 %% API
--export([terms/2]).
+-export([uterms/2]).
 
 %%----------------------------------------------------------------------------
 %% API
 %%----------------------------------------------------------------------------
 
-%% @doc Returns a list of terms.
--spec terms(utf8_string(), iso_639_1()) -> [utf8_string()].
-terms(Str, Lang) ->
+%% @doc Returns a list of terms with duplicates removed.
+-spec uterms(utf8_string(), iso_639_1()) -> [utf8_string()].
+uterms(Str, Lang) ->
     plists:usort(
       plists:map(
         fun (T) -> (list_to_atom("doko_stemming_" ++ Lang)):stem(T) end,
