@@ -115,8 +115,8 @@ end_per_testcase(_TestCase, Config) ->
         ok ->
             Nodes = test_nodes(),
             %% stop doko on test nodes
-            {_,_} = rpc:multicall(Nodes, doko_cluster, stop, []),
-            {_,_} = rpc:multicall(Nodes, doko_node, stop, []),
+            rpc:multicall(Nodes, doko_cluster, stop, []),
+            rpc:multicall(Nodes, doko_node, stop, []),
             %% ready
             ok
     end.
