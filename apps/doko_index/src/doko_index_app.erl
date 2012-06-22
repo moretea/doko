@@ -11,7 +11,7 @@
 %%----------------------------------------------------------------------------
 
 start(_StartType, _StartArgs) ->
-    doko_index_sup:start_link().
+    doko_index_top_sup:start_link().
 
 stop(_State) ->
     ok.

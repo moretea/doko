@@ -24,7 +24,7 @@ start_link() ->
 %%----------------------------------------------------------------------------
 
 init([]) ->
-    {ok,{{one_for_one,5,10},[?CHILD(doko_index_sup, supervisor),
+    {ok,{{one_for_one,5,10},[?CHILD(doko_index_top_sup, supervisor),
                              ?CHILD(doko_node, worker)]}}.
 
 %% Local variables:

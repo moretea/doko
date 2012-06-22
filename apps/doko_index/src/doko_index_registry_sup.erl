@@ -5,7 +5,8 @@
 -behaviour(supervisor).
 
 %% API
--export([start_link/0]).
+-export([name/1]).
+-export([start_link/1]).
 
 %% supervisor callbacks
 -export([init/1]).
@@ -14,23 +15,26 @@
 %% API
 %%----------------------------------------------------------------------------
 
-start_link() ->
-    supervisor:start_link({local,?MODULE}, ?MODULE, []).
+name(IndexId) ->
+    list_to_atom(?MODULE_STRING ++ "[" ++ atom_to_list(IndexId) ++ "]").
+
+start_link(IndexId) ->
+    supervisor:start_link({local,name(IndexId)}, ?MODULE, [IndexId]).
 
 %%----------------------------------------------------------------------------
 %% supervisor callbacks
 %%----------------------------------------------------------------------------
 
-init([]) ->
+init([IndexId]) ->
     {ok, {{one_for_one, 5, 10},
-          [child_spec(N)||N <- lists:seq(0, ?SIZE - 1)]}}.
+          [child_spec(IndexId, N)||N <- lists:seq(0, ?SIZE - 1)]}}.
 
 %%----------------------------------------------------------------------------
 %% Internal functions
 %%----------------------------------------------------------------------------
 
-child_spec(N) ->
-    Name = doko_index_registry:name(N),
+child_spec(IndexId, N) ->
+    Name = doko_index_registry:name(IndexId, N),
     Mod = doko_index_registry,
     {Name,{Mod,start_link,[Name]},permanent,2000,worker,[Mod]}.
 

@@ -22,7 +22,7 @@ add_index(IndexId, Lang) ->
     %% register lang
     gen_server:cast(?SERVER, {add,IndexId,Lang}),
     %% start index
-    doko_index:start_index(IndexId),
+    doko_index:add_index(IndexId),
     %% done
     ok.
 

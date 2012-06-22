@@ -1,20 +1,21 @@
 %% @private
--module(doko_index_sup).
+-module(doko_index_top_sup).
 
 -behaviour(supervisor).
 
 %% API
+-export([add_index/1]).
 -export([start_link/0]).
 
 %% supervisor callbacks
 -export([init/1]).
 
-%% Helper macro for declaring children of supervisor
--define(CHILD(I, Type), {I,{I,start_link,[]},permanent,2000,Type,[I]}).
-
 %%----------------------------------------------------------------------------
 %% API
 %%----------------------------------------------------------------------------
+
+add_index(IndexId) ->
+    supervisor:start_child(?MODULE, [IndexId]).
 
 start_link() ->
     supervisor:start_link({local,?MODULE}, ?MODULE, []).
@@ -24,8 +25,9 @@ start_link() ->
 %%----------------------------------------------------------------------------
 
 init([]) ->
-    {ok,{{one_for_one,5,10},[?CHILD(doko_index_registry_sup, supervisor),
-                             ?CHILD(doko_index_term_sup, supervisor)]}}.
+    {ok,{{simple_one_for_one,0,1},
+         [{doko_index_sup,{doko_index_sup,start_link,[]},
+           temporary,brutal_kill,worker,[doko_index,sup]}]}}.
 
 %% Local variables:
 %% mode: erlang
