@@ -9,11 +9,11 @@
 
 add_doc(DocId, Text) ->
     %% FIXME: hardcoded language
-    doko_cluster:add_doc(DocId, doko_preprocessing:terms(Text, "en")).
+    doko_cluster:add_doc(DocId, doko_preprocessing:uterms(Text, "en")).
 
 del_doc(DocId, Text) ->
     %% FIXME: hardcoded language
-    doko_cluster:del_doc(DocId, doko_preprocessing:terms(Text, "en")).
+    doko_cluster:del_doc(DocId, doko_preprocessing:uterms(Text, "en")).
 
 %% Local variables:
 %% mode: erlang

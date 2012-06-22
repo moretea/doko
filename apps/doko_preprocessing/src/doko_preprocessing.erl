@@ -2,15 +2,17 @@
 -include("../../doko_utf8/include/doko_utf8.hrl").
 
 %% API
--export([terms/2]).
+-export([uterms/2]).
+-export([expand/2]).
 
 %%----------------------------------------------------------------------------
 %% API
 %%----------------------------------------------------------------------------
 
-%% @doc Returns a list of terms.
--spec terms(utf8_string(), iso_639_1()) -> [utf8_string()].
-terms(Str, Lang) ->
+%% @doc Returns a list of terms with duplicates removed.
+-spec uterms(utf8_string(), iso_639_1()) -> [utf8_string()].
+uterms(Text, Lang) ->
+    Str = expand(Text, Lang),
     plists:usort(
       plists:map(
         fun (T) -> (list_to_atom("doko_stemming_" ++ Lang)):stem(T) end,
@@ -21,6 +23,15 @@ terms(Str, Lang) ->
 %%----------------------------------------------------------------------------
 %% Internal functions
 %%----------------------------------------------------------------------------
+
+%% TODO: move this code to separate modules (like stemming)
+expand(Str, Lang) ->
+    case Lang of
+        "nl" -> Str;
+        "en" ->
+            re:replace(Str, <<"(.)n't">>, <<"\\1 not">>,
+                       [unicode,global,{return,binary}])
+    end.
 
 tokenize(Str, Lang) ->
     RE = case Lang of

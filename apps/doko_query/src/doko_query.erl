@@ -34,7 +34,7 @@ execute(Str) ->
     Translate =
         fun (Keyword) ->
                 %% FIXME: hardcoded language
-                Result = case doko_preprocessing:terms(Keyword, "en") of
+                Result = case doko_preprocessing:uterms(Keyword, "en") of
                              []    -> stop_word;
                              Terms -> Terms
                          end,
