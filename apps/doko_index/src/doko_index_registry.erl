@@ -19,11 +19,11 @@
 
 server(IndexId, Term) ->
     gen_server:call(name(IndexId, erlang:phash2(Term, ?SIZE)),
-                    {server,Term,false}).
+                    {server,IndexId,Term,false}).
 
 server(IndexId, Term, create) ->
     gen_server:call(name(IndexId, erlang:phash2(Term, ?SIZE)),
-                    {server,Term,true}).
+                    {server,IndexId,Term,true}).
 
 name(IndexId, N) ->
     list_to_atom(?MODULE_STRING ++ "[" ++ atom_to_list(IndexId) ++ "]["
@@ -42,7 +42,7 @@ init([]) ->
     {ok,dict:new()}.
 
 %% @private
-handle_call({server,Term,Create}, _From, Dict = State) ->
+handle_call({server,IndexId,Term,Create}, _From, Dict = State) ->
     {Server,NextState} =
         case {dict:find(Term, Dict),Create} of
             {{ok,Value},_} ->
@@ -50,8 +50,9 @@ handle_call({server,Term,Create}, _From, Dict = State) ->
             {error,false} ->
                 {undefined,State};
             {error,true} ->
+                SupRef = doko_index_term_sup:name(IndexId),
                 {ok,NewServer} =
-                    supervisor:start_child(doko_index_term_sup, []),
+                    supervisor:start_child(SupRef, []),
                 {NewServer,dict:store(Term, NewServer, Dict)}
         end,
     {reply,Server,NextState};

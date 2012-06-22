@@ -4,7 +4,7 @@
 
 %% API
 -export([add_index/2]).
--export([add_doc_id/2,del_doc_id/2,doc_ids/1]).
+-export([add_doc_id/3,del_doc_id/3,doc_ids/2]).
 -export([start/0,stop/0]).
 -export([start_link/0]).
 
@@ -26,14 +26,14 @@ add_index(IndexId, Lang) ->
     %% done
     ok.
 
-add_doc_id(Term, DocId) ->
-    doko_index:add_doc_id(Term, DocId).
+add_doc_id(IndexId, Term, DocId) ->
+    doko_index:add_doc_id(IndexId, Term, DocId).
 
-del_doc_id(Term, DocId) ->
-    doko_index:del_doc_id(Term, DocId).
+del_doc_id(IndexId, Term, DocId) ->
+    doko_index:del_doc_id(IndexId, Term, DocId).
 
-doc_ids(Term) ->
-    doko_index:doc_ids(Term).
+doc_ids(IndexId, Term) ->
+    doko_index:doc_ids(IndexId, Term).
 
 %% @doc Starts a node.
 start() ->
