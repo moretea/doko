@@ -15,57 +15,78 @@
 
 test_queries(_Config) ->
     Nodes = test_nodes(),
+    %% add index
+    Index = index,
+    rpc:call(random(Nodes), doko_ingest, add_index, [Index, "en"]),
     %% add documents
     ok = rpc:call(random(Nodes),
-                  doko_ingest, add_doc, [1,<<"hello world">>]),
+                  doko_ingest, add_doc, [Index,1,<<"hello world">>]),
     ok = rpc:call(random(Nodes),
-                  doko_ingest, add_doc, [2,<<"goodbye world">>]),
+                  doko_ingest, add_doc, [Index,2,<<"goodbye world">>]),
     ok = rpc:call(random(Nodes),
-                  doko_ingest, add_doc, [3,<<"aloha world">>]),
+                  doko_ingest, add_doc, [Index,3,<<"aloha world">>]),
     %% test queries
-    Result1 = rpc:call(random(Nodes), doko_query, execute, [<<"aloha">>]),
+    Result1 = rpc:call(random(Nodes), doko_query, execute,
+                       [Index,<<"aloha">>]),
+    timer:sleep(1000),
     [3] = gb_sets:to_list(Result1),
     Result2 = rpc:call(random(Nodes), doko_query, execute,
-                       [<<"(hello | goodbye) & world & !aloha">>]),
+                       [Index,<<"(hello | goodbye) & world & !aloha">>]),
     [1,2] = lists:sort(gb_sets:to_list(Result2)),
     ok.
 
 test_replication(_Config) ->
     Nodes = test_nodes(),
+    %% add index
+    Index = index,
+    rpc:call(random(Nodes), doko_ingest, add_index, [Index, "en"]),
     %% add document
-    ok = rpc:call(random(Nodes), doko_ingest, add_doc, [1,<<"hello world">>]),
+    ok = rpc:call(random(Nodes), doko_ingest, add_doc,
+                  [Index,1,<<"hello world">>]),
     %% test replication
-    {Result,[]} = rpc:multicall(Nodes, doko_index, doc_ids, [<<"hello">>]),
+    {Result,[]} = rpc:multicall(Nodes, doko_index, doc_ids,
+                                [Index,<<"hello">>]),
     3 = length(lists:filter(fun gb_sets:is_empty/1, Result)),
     ok.
 
 test_del_doc(_Config) ->
     Nodes = test_nodes(),
+    %% add index
+    Index = index,
+    rpc:call(random(Nodes), doko_ingest, add_index, [Index, "en"]),
     %% add document
-    ok = rpc:call(random(Nodes), doko_ingest, add_doc, [1,<<"hello world">>]),
+    ok = rpc:call(random(Nodes), doko_ingest, add_doc,
+                  [Index,1,<<"hello world">>]),
     %% execute query and check result
     Query = fun () ->
                     rpc:call(random(Nodes),
-                             doko_query, execute, [<<"hello">>])
+                             doko_query, execute, [Index,<<"hello">>])
             end,
     [1] = gb_sets:to_list(Query()),
     %% delete document
-    ok = rpc:call(random(Nodes), doko_ingest, del_doc, [1,<<"hello world">>]),
+    ok = rpc:call(random(Nodes), doko_ingest, del_doc,
+                  [Index,1,<<"hello world">>]),
     %% execute query and check result
-    Result2 = rpc:call(random(Nodes), doko_query, execute, [<<"hello">>]),
+    Result2 = rpc:call(random(Nodes), doko_query, execute,
+                       [Index,<<"hello">>]),
     true = gb_sets:is_empty(Result2),
     ok.
 
 test_redundancy(Config) ->
     Nodes = test_nodes(),
+    %% add index
+    Index = index,
+    rpc:call(random(Nodes), doko_ingest, add_index, [Index, "en"]),
     %% add document
-    ok = rpc:call(random(Nodes), doko_ingest, add_doc, [1,<<"hello world">>]),
+    ok = rpc:call(random(Nodes), doko_ingest, add_doc,
+                  [Index,1,<<"hello world">>]),
     %% stop one of the nodes that has the data
-    [Node|_] = rpc:call(random(Nodes), doko_cluster, where, [<<"hello">>]),
+    [Node|_] = rpc:call(random(Nodes), doko_cluster, where,
+                        [Index,<<"hello">>]),
     slave:stop(Node),
     %% execute query and check result
     Result = rpc:call(random(lists:delete(Node,Nodes)),
-                      doko_query, execute, [<<"hello">>]),
+                      doko_query, execute, [Index,<<"hello">>]),
     [1] = gb_sets:to_list(Result),
     %% restart node
     start_node(Node,Config),
@@ -79,7 +100,8 @@ all() ->
     [{group,systest}].
 
 groups() ->
-    [{systest,[shuffle,sequence,{repeat,10}],[test_queries,
+    %% [{systest,[shuffle,sequence,{repeat,10}],[test_queries,
+    [{systest,[sequence,{repeat,1}],[test_queries,
                                               test_replication,
                                               test_del_doc,
                                               test_redundancy]}].

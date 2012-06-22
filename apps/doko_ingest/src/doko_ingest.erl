@@ -1,19 +1,25 @@
 -module(doko_ingest).
 
 %% API
--export([add_doc/2,del_doc/2]).
+-export([add_index/2]).
+-export([add_doc/3,del_doc/3]).
 
 %%----------------------------------------------------------------------------
 %% API
 %%----------------------------------------------------------------------------
 
-add_doc(DocId, Text) ->
-    %% FIXME: hardcoded language
-    doko_cluster:add_doc(DocId, doko_preprocessing:uterms(Text, "en")).
+add_index(IndexId, Lang) ->
+    doko_cluster:add_index(IndexId, Lang).
 
-del_doc(DocId, Text) ->
+add_doc(IndexId, DocId, Text) ->
     %% FIXME: hardcoded language
-    doko_cluster:del_doc(DocId, doko_preprocessing:uterms(Text, "en")).
+    doko_cluster:add_doc(IndexId, DocId,
+                         doko_preprocessing:uterms(Text, "en")).
+
+del_doc(IndexId, DocId, Text) ->
+    %% FIXME: hardcoded language
+    doko_cluster:del_doc(IndexId, DocId,
+                         doko_preprocessing:uterms(Text, "en")).
 
 %% Local variables:
 %% mode: erlang

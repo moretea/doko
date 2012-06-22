@@ -5,7 +5,7 @@
 -endif.
 
 %% API
--export([execute/1]).
+-export([execute/2]).
 
 %% Record declarations ("q" is short for "query")
 -record(and_q,  {l_sub_q :: q(), r_sub_q :: q()}).
@@ -24,8 +24,8 @@
 %% API
 %%----------------------------------------------------------------------------
 
--spec execute(utf8_str()) -> gb_set(). %% TODO: might return an error
-execute(Str) ->
+-spec execute(atom(), utf8_str()) -> gb_set(). %% TODO: might return an error
+execute(IndexId, Str) ->
     %% parse and preprocess query
     Clauses = [partition(flatten(X))||X <- clauses(dnf(from_str(Str)))],
     %% translate keywords to terms
@@ -43,7 +43,7 @@ execute(Str) ->
     Terms = dict:from_list(lists:map(Translate, UniqueKeywords)),
     %% fetch data
     Fetch = fun (Term) ->
-                    DocIds = doko_cluster:doc_ids(Term),
+                    DocIds = doko_cluster:doc_ids(IndexId, Term),
                     {Term,DocIds}
             end,
     UniqueTerms = 

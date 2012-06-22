@@ -1,9 +1,10 @@
 -module(doko_cluster).
 
 %% API
--export([add_doc/2,del_doc/2,doc_ids/1]).
+-export([add_index/2]).
+-export([add_doc/3,del_doc/3,doc_ids/2]).
 -export([start/1,stop/0]).
--export([where/1]).
+-export([where/2]).
 
 -define(RING_SIZE, 420). % number of virtual nodes
 -define(N_DUPS, 2). % number of duplicates
@@ -12,16 +13,23 @@
 %% API
 %%----------------------------------------------------------------------------
 
+add_index(IndexId, Lang) ->
+    {ok,Nodes} = application:get_env(doko_cluster, nodes),
+    %% TODO: choose appropriate timeout
+    Timeout = infinity,
+    %% TODO: handle errors
+    rpc:multicall(Nodes, doko_node, add_index, [IndexId, Lang], Timeout).
+
 %% @doc Adds a document.
-add_doc(DocId, Terms) ->
-    foreach_term(add_doc_id, DocId, Terms).
+add_doc(IndexId, DocId, Terms) ->
+    foreach_term(add_doc_id, IndexId, DocId, Terms).
 
 %% @doc Deletes a document.
-del_doc(DocId, Terms) ->
-    foreach_term(del_doc_id, DocId, Terms).
+del_doc(IndexId, DocId, Terms) ->
+    foreach_term(del_doc_id, IndexId, DocId, Terms).
 
-doc_ids(Term) ->
-    get_doc_ids(Term).
+doc_ids(IndexId, Term) ->
+    get_doc_ids(IndexId, Term).
 
 %% @doc Starts the application.
 start(Nodes) ->
@@ -38,27 +46,28 @@ stop() ->
 %% Internal functions
 %%----------------------------------------------------------------------------
 
-where(Term) ->
-    {ok, Nodes} = application:get_env(doko_cluster, nodes),
-    Vnode = erlang:phash2(Term, ?RING_SIZE),
+where(IndexId, Term) ->
+    {ok,Nodes} = application:get_env(doko_cluster, nodes),
+    Vnode = erlang:phash2({IndexId,Term}, ?RING_SIZE),
     Start = 1 + erlang:trunc((Vnode / ?RING_SIZE) * length(Nodes)),
     lists:sublist(Nodes ++ Nodes, Start, ?N_DUPS).
 
-foreach_term(Fun, DocId, Terms) ->
+foreach_term(Fun, IndexId, DocId, Terms) ->
     plists:foreach(
       fun (Term) ->
               %% TODO: choose appropriate timeout
               Timeout = infinity,
               %% TODO: handle errors
-              {_,_} = rpc:multicall(where(Term),
-                                    doko_node, Fun, [Term, DocId], Timeout)
+              {_,_} = rpc:multicall(where(IndexId, Term),
+                                    doko_node, Fun, [IndexId,Term,DocId],
+                                    Timeout)
       end,
       Terms).
 
-get_doc_ids(Term) ->
+get_doc_ids(IndexId, Term) ->
     Caller = self(),
     Tag = make_ref(),
-    Receiver = doc_ids_receiver(Caller, Tag, Term),
+    Receiver = doc_ids_receiver(Caller, Tag, IndexId, Term),
     Mref = monitor(process, Receiver),
     Receiver ! {Caller,Tag},
     receive
@@ -69,7 +78,7 @@ get_doc_ids(Term) ->
             exit(Reason)
     end.
 
-doc_ids_receiver(Caller, Tag, Term) ->
+doc_ids_receiver(Caller, Tag, IndexId, Term) ->
     spawn(
       fun () ->
               process_flag(trap_exit, true),
@@ -83,9 +92,9 @@ doc_ids_receiver(Caller, Tag, Term) ->
                                fun (Node) ->
                                        rpc:async_call(Node,
                                                       doko_node, doc_ids,
-                                                      [Term])
+                                                      [IndexId,Term])
                                end,
-                               where(Term)),
+                               where(IndexId, Term)),
                       Result = yield(Keys, 1, length(Keys)),
                       exit({self(),Tag,Result})
               end

@@ -4,7 +4,8 @@
 -behaviour(supervisor).
 
 %% API
--export([start_link/0]).
+-export([name/1]).
+-export([start_link/1]).
 
 %% supervisor callbacks
 -export([init/1]).
@@ -13,8 +14,11 @@
 %% API
 %%----------------------------------------------------------------------------
 
-start_link() ->
-    supervisor:start_link({local,?MODULE}, ?MODULE, []).
+name(IndexId) ->
+    list_to_atom(?MODULE_STRING++"[" ++ atom_to_list(IndexId) ++ "]").
+
+start_link(IndexId) ->
+    supervisor:start_link({local,name(IndexId)}, ?MODULE, []).
 
 %%----------------------------------------------------------------------------
 %% supervisor callbacks
