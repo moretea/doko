@@ -10,15 +10,12 @@
 %% supervisor callbacks
 -export([init/1]).
 
-%% Helper macro for declaring children of supervisor
--define(CHILD(I, Arg),{I,{I,start_link,[]},permanent,5000,supervisor,[Arg]}).
-
 %%----------------------------------------------------------------------------
 %% API
 %%----------------------------------------------------------------------------
 
 name(IndexId) ->
-    list_to_atom(?MODULE_STRING++"[" ++ atom_to_list(IndexId) ++ "]").
+    list_to_atom(?MODULE_STRING ++ "[" ++ atom_to_list(IndexId) ++ "]").
 
 start_link(IndexId) ->
     supervisor:start_link({local,name(IndexId)}, ?MODULE, [IndexId]).

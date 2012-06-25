@@ -101,7 +101,7 @@ all() ->
 
 groups() ->
     %% [{systest,[shuffle,sequence,{repeat,10}],[test_queries,
-    [{systest,[sequence,{repeat,1}],[test_queries,
+    [{systest,[shuffle,sequence,{repeat,10}],[test_queries,
                                               test_replication,
                                               test_del_doc,
                                               test_redundancy]}].
