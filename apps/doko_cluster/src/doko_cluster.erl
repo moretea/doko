@@ -1,7 +1,7 @@
 -module(doko_cluster).
 
 %% API
--export([add_index/2]).
+-export([add_index/2,del_index/1]).
 -export([add_doc/3,del_doc/3,doc_ids/2]).
 -export([start/1,stop/0]).
 -export([where/2]).
@@ -19,6 +19,13 @@ add_index(IndexId, Lang) ->
     Timeout = infinity,
     %% TODO: handle errors
     rpc:multicall(Nodes, doko_node, add_index, [IndexId, Lang], Timeout).
+
+del_index(IndexId) ->
+    {ok,Nodes} = application:get_env(doko_cluster, nodes),
+    %% TODO: choose appropriate timeout
+    Timeout = infinity,
+    %% TODO: handle errors
+    rpc:multicall(Nodes, doko_node, del_index, [IndexId], Timeout).
 
 %% @doc Adds a document.
 add_doc(IndexId, DocId, Terms) ->

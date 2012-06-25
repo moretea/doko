@@ -4,7 +4,7 @@
 -behaviour(supervisor).
 
 %% API
--export([add_index/1]).
+-export([add_index/1,del_index/1]).
 -export([start_link/0]).
 
 %% supervisor callbacks
@@ -16,6 +16,12 @@
 
 add_index(IndexId) ->
     supervisor:start_child(?MODULE, [IndexId]).
+
+del_index(IndexId) ->
+    case whereis(doko_index_sup:name(IndexId)) of
+        undefined -> ok;
+        Pid -> supervisor:terminate_child(?MODULE, Pid)
+    end.
 
 start_link() ->
     supervisor:start_link({local,?MODULE}, ?MODULE, []).

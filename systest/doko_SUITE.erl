@@ -2,7 +2,8 @@
 -include_lib("common_test/include/ct.hrl").
 
 %% Tests
--export([test_queries/1,test_replication/1,test_redundancy/1,test_del_doc/1]).
+-export([test_del_doc/1,test_del_index/1,test_queries/1,test_redundancy/1,
+         test_replication/1]).
 
 %% CT functions
 -export([all/0, groups/0]).
@@ -17,7 +18,7 @@ test_queries(_Config) ->
     Nodes = test_nodes(),
     %% add index
     Index = index,
-    rpc:call(random(Nodes), doko_ingest, add_index, [Index, "en"]),
+    rpc:call(random(Nodes), doko_cluster, add_index, [Index, "en"]),
     %% add documents
     ok = rpc:call(random(Nodes),
                   doko_ingest, add_doc, [Index,1,<<"hello world">>]),
@@ -39,7 +40,7 @@ test_replication(_Config) ->
     Nodes = test_nodes(),
     %% add index
     Index = index,
-    rpc:call(random(Nodes), doko_ingest, add_index, [Index, "en"]),
+    rpc:call(random(Nodes), doko_cluster, add_index, [Index, "en"]),
     %% add document
     ok = rpc:call(random(Nodes), doko_ingest, add_doc,
                   [Index,1,<<"hello world">>]),
@@ -53,7 +54,7 @@ test_del_doc(_Config) ->
     Nodes = test_nodes(),
     %% add index
     Index = index,
-    rpc:call(random(Nodes), doko_ingest, add_index, [Index, "en"]),
+    rpc:call(random(Nodes), doko_cluster, add_index, [Index, "en"]),
     %% add document
     ok = rpc:call(random(Nodes), doko_ingest, add_doc,
                   [Index,1,<<"hello world">>]),
@@ -76,7 +77,7 @@ test_redundancy(Config) ->
     Nodes = test_nodes(),
     %% add index
     Index = index,
-    rpc:call(random(Nodes), doko_ingest, add_index, [Index, "en"]),
+    rpc:call(random(Nodes), doko_cluster, add_index, [Index, "en"]),
     %% add document
     ok = rpc:call(random(Nodes), doko_ingest, add_doc,
                   [Index,1,<<"hello world">>]),
@@ -92,6 +93,22 @@ test_redundancy(Config) ->
     start_node(Node,Config),
     ok.
 
+test_del_index(_Config) ->
+    Nodes = test_nodes(),
+    %% add index
+    Index = index,
+    rpc:call(random(Nodes), doko_cluster, add_index, [Index, "en"]),
+    Name = doko_index_sup:name(Index),
+    {Result1,[]} = rpc:multicall(Nodes, erlang, whereis, [Name]),
+    0 = length([X||X <- Result1, X == undefined]),
+    %% del index
+    rpc:call(random(Nodes), doko_cluster, del_index, [Index]),
+    {Result2,[]} = rpc:multicall(Nodes, erlang, whereis, [Name]),
+    Length = length(Nodes),
+    Length = length([X||X <- Result2, X == undefined]),
+    %% done
+    ok.
+
 %%----------------------------------------------------------------------------
 %% CT functions
 %%----------------------------------------------------------------------------
@@ -100,11 +117,11 @@ all() ->
     [{group,systest}].
 
 groups() ->
-    %% [{systest,[shuffle,sequence,{repeat,10}],[test_queries,
     [{systest,[shuffle,sequence,{repeat,10}],[test_queries,
                                               test_replication,
                                               test_del_doc,
-                                              test_redundancy]}].
+                                              test_redundancy,
+                                              test_del_index]}].
 
 init_per_suite(Config) ->
     Nodes = test_nodes(),

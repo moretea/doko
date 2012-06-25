@@ -1,7 +1,7 @@
 -module(doko_index).
 
 %% API
--export([add_index/1]).
+-export([add_index/1,del_index/1]).
 -export([add_doc_id/3,del_doc_id/3,doc_ids/2]).
 
 %%----------------------------------------------------------------------------
@@ -10,6 +10,9 @@
 
 add_index(IndexId) ->
     doko_index_top_sup:add_index(IndexId).
+
+del_index(IndexId) ->
+    doko_index_top_sup:del_index(IndexId).
     
 add_doc_id(IndexId, Term, DocId) ->
     doko_index_term:add_doc_id(

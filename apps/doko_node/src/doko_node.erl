@@ -3,7 +3,7 @@
 -behaviour(gen_server).
 
 %% API
--export([add_index/2]).
+-export([add_index/2,del_index/1]).
 -export([add_doc_id/3,del_doc_id/3,doc_ids/2]).
 -export([start/0,stop/0]).
 -export([start_link/0]).
@@ -23,6 +23,14 @@ add_index(IndexId, Lang) ->
     gen_server:cast(?SERVER, {add,IndexId,Lang}),
     %% start index
     doko_index:add_index(IndexId),
+    %% done
+    ok.
+
+del_index(IndexId) ->
+    %% unregister language
+    gen_server:cast(?SERVER, {del,IndexId}),
+    %% stop index
+    doko_index:del_index(IndexId),
     %% done
     ok.
 
@@ -65,6 +73,9 @@ handle_cast({add,IndexId,Lang}, Dict = State) ->
                     true  -> State;
                     false -> dict:store(IndexId, Lang, Dict)
                 end,
+    {noreply,NextState};
+handle_cast({del,IndexId}, Dict = _State) ->
+    NextState = dict:erase(IndexId,Dict),
     {noreply,NextState};
 handle_cast(_Msg, State) ->
     {noreply,State}.
