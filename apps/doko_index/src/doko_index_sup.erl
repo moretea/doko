@@ -10,9 +10,6 @@
 %% supervisor callbacks
 -export([init/1]).
 
-%% Helper macro for declaring children of supervisor
--define(CHILD(I, Arg),{I,{I,start_link,[]},permanent,5000,supervisor,[Arg]}).
-
 %%----------------------------------------------------------------------------
 %% API
 %%----------------------------------------------------------------------------
