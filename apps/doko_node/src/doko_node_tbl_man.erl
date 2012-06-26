@@ -9,6 +9,7 @@
 loop() ->
     receive
         init ->
+            true = link(whereis(doko_node)),
             loop();
         _ ->
             loop()
