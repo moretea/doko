@@ -106,6 +106,11 @@ test_del_index(_Config) ->
     {Result2,[]} = rpc:multicall(Nodes, erlang, whereis, [Name]),
     Length = length(Nodes),
     Length = length([X||X <- Result2, X == undefined]),
+    %% add it again
+    rpc:call(random(Nodes), doko_cluster, add_index, [Index, "en"]),
+    Name = doko_index_sup:name(Index),
+    {Result3,[]} = rpc:multicall(Nodes, erlang, whereis, [Name]),
+    0 = length([X||X <- Result1, X == undefined]),
     %% done
     ok.
 
