@@ -8,14 +8,14 @@
 %%----------------------------------------------------------------------------
 
 add_doc(IndexId, DocId, Text) ->
-    %% FIXME: hardcoded language
+    Lang = doko_cluster:index_lang(IndexId),
     doko_cluster:add_doc(IndexId, DocId,
-                         doko_preprocessing:uterms(Text, "en")).
+                         doko_preprocessing:uterms(Text, Lang)).
 
 del_doc(IndexId, DocId, Text) ->
-    %% FIXME: hardcoded language
+    Lang = doko_cluster:index_lang(IndexId),
     doko_cluster:del_doc(IndexId, DocId,
-                         doko_preprocessing:uterms(Text, "en")).
+                         doko_preprocessing:uterms(Text, Lang)).
 
 %% Local variables:
 %% mode: erlang
