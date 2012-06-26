@@ -10,6 +10,7 @@ loop() ->
     receive
         init ->
             true = link(whereis(doko_node)),
+            process_flag(trap_exit, true),
             loop();
         _ ->
             loop()
