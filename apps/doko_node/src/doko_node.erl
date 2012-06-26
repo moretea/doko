@@ -3,7 +3,7 @@
 -behaviour(gen_server).
 
 %% API
--export([add_index/2,del_index/1]).
+-export([add_index/2,del_index/1,index_lang/1]).
 -export([add_doc_id/3,del_doc_id/3,doc_ids/2]).
 -export([start/0,stop/0]).
 -export([start_link/0]).
@@ -34,6 +34,9 @@ del_index(IndexId) ->
     %% done
     ok.
 
+index_lang(IndexId) ->
+    gen_server:call(?SERVER, {get,IndexId}).
+
 add_doc_id(IndexId, Term, DocId) ->
     doko_index:add_doc_id(IndexId, Term, DocId).
 
@@ -63,6 +66,12 @@ init([]) ->
     {ok,dict:new()}.
 
 %% @private
+handle_call({get,IndexId}, _Client, Dict = State) ->
+    Reply = case dict:find(IndexId,Dict) of
+                {ok,Value} -> Value;
+                error      -> undefined
+            end,
+    {reply,Reply,State};
 handle_call(_Request, _Client, State) ->
     Reply = ok,
     {reply,Reply,State}.

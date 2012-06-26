@@ -33,8 +33,9 @@ execute(IndexId, Str) ->
         lists:usort(lists:flatten([Xs++Ys||{Xs,Ys} <- Clauses])),
     Translate =
         fun (Keyword) ->
+                Lang = doko_cluster:index_lang(IndexId),
                 %% FIXME: hardcoded language
-                Result = case doko_preprocessing:uterms(Keyword, "en") of
+                Result = case doko_preprocessing:uterms(Keyword, Lang) of
                              []    -> stop_word;
                              Terms -> Terms
                          end,
