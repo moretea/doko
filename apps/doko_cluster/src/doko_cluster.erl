@@ -18,14 +18,16 @@ add_index(IndexId, Lang) ->
     %% TODO: choose appropriate timeout
     Timeout = infinity,
     %% TODO: handle errors
-    rpc:multicall(Nodes, doko_node, add_index, [IndexId, Lang], Timeout).
+    rpc:multicall(Nodes, doko_node, add_index, [IndexId, Lang], Timeout),
+    ok.
 
 del_index(IndexId) ->
     {ok,Nodes} = application:get_env(doko_cluster, nodes),
     %% TODO: choose appropriate timeout
     Timeout = infinity,
     %% TODO: handle errors
-    rpc:multicall(Nodes, doko_node, del_index, [IndexId], Timeout).
+    rpc:multicall(Nodes, doko_node, del_index, [IndexId], Timeout),
+    ok.
 
 index_lang(IndexId) ->
     doko_node:index_lang(IndexId).

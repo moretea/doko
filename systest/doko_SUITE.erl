@@ -18,7 +18,7 @@ test_queries(_Config) ->
     Nodes = test_nodes(),
     %% add index
     Index = index,
-    rpc:call(random(Nodes), doko_cluster, add_index, [Index, "en"]),
+    ok = rpc:call(random(Nodes), doko_cluster, add_index, [Index, "en"]),
     %% add documents
     ok = rpc:call(random(Nodes),
                   doko_ingest, add_doc, [Index,1,<<"hello world">>]),
@@ -40,7 +40,7 @@ test_replication(_Config) ->
     Nodes = test_nodes(),
     %% add index
     Index = index,
-    rpc:call(random(Nodes), doko_cluster, add_index, [Index, "en"]),
+    ok = rpc:call(random(Nodes), doko_cluster, add_index, [Index, "en"]),
     %% add document
     ok = rpc:call(random(Nodes), doko_ingest, add_doc,
                   [Index,1,<<"hello world">>]),
@@ -54,7 +54,7 @@ test_del_doc(_Config) ->
     Nodes = test_nodes(),
     %% add index
     Index = index,
-    rpc:call(random(Nodes), doko_cluster, add_index, [Index, "en"]),
+    ok = rpc:call(random(Nodes), doko_cluster, add_index, [Index, "en"]),
     %% add document
     ok = rpc:call(random(Nodes), doko_ingest, add_doc,
                   [Index,1,<<"hello world">>]),
@@ -77,7 +77,7 @@ test_redundancy(Config) ->
     Nodes = test_nodes(),
     %% add index
     Index = index,
-    rpc:call(random(Nodes), doko_cluster, add_index, [Index, "en"]),
+    ok = rpc:call(random(Nodes), doko_cluster, add_index, [Index, "en"]),
     %% add document
     ok = rpc:call(random(Nodes), doko_ingest, add_doc,
                   [Index,1,<<"hello world">>]),
@@ -97,19 +97,19 @@ test_del_index(_Config) ->
     Nodes = test_nodes(),
     %% add index
     Index = index,
-    rpc:call(random(Nodes), doko_cluster, add_index, [Index, "en"]),
+    ok = rpc:call(random(Nodes), doko_cluster, add_index, [Index, "en"]),
     timer:sleep(100), % adding indices takes some time 
     Name = doko_index_sup:name(Index),
     {Result1,[]} = rpc:multicall(Nodes, erlang, whereis, [Name]),
     0 = length([X||X <- Result1, X == undefined]),
     %% del index
-    rpc:call(random(Nodes), doko_cluster, del_index, [Index]),
+    ok = rpc:call(random(Nodes), doko_cluster, del_index, [Index]),
     timer:sleep(100), % deleting indices takes some time 
     {Result2,[]} = rpc:multicall(Nodes, erlang, whereis, [Name]),
     Length = length(Nodes),
     Length = length([X||X <- Result2, X == undefined]),
     %% add it again
-    rpc:call(random(Nodes), doko_cluster, add_index, [Index, "en"]),
+    ok = rpc:call(random(Nodes), doko_cluster, add_index, [Index, "en"]),
     Name = doko_index_sup:name(Index),
     timer:sleep(100), % adding indices takes some time 
     {Result3,[]} = rpc:multicall(Nodes, erlang, whereis, [Name]),
