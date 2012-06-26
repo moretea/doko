@@ -98,18 +98,20 @@ test_del_index(_Config) ->
     %% add index
     Index = index,
     rpc:call(random(Nodes), doko_cluster, add_index, [Index, "en"]),
+    timer:sleep(100), % adding indices takes some time 
     Name = doko_index_sup:name(Index),
     {Result1,[]} = rpc:multicall(Nodes, erlang, whereis, [Name]),
     0 = length([X||X <- Result1, X == undefined]),
     %% del index
     rpc:call(random(Nodes), doko_cluster, del_index, [Index]),
+    timer:sleep(100), % deleting indices takes some time 
     {Result2,[]} = rpc:multicall(Nodes, erlang, whereis, [Name]),
     Length = length(Nodes),
     Length = length([X||X <- Result2, X == undefined]),
     %% add it again
     rpc:call(random(Nodes), doko_cluster, add_index, [Index, "en"]),
     Name = doko_index_sup:name(Index),
-    timer:sleep(100),
+    timer:sleep(100), % adding indices takes some time 
     {Result3,[]} = rpc:multicall(Nodes, erlang, whereis, [Name]),
     0 = length([X||X <- Result3, X == undefined]),
     %% done
