@@ -2,7 +2,11 @@
 -include_lib("common_test/include/ct.hrl").
 
 %% Tests
--export([test_del_doc/1,test_del_index/1,test_queries/1,test_redundancy/1,
+-export([test_del_doc/1,
+         test_del_index/1,
+         test_node_data_persistent/1,
+         test_queries/1,
+         test_redundancy/1,
          test_replication/1]).
 
 %% CT functions
@@ -117,6 +121,16 @@ test_del_index(_Config) ->
     %% done
     ok.
 
+test_node_data_persistent(_Config) ->
+    Index = index,
+    Lang = "en",
+    Node = random(test_nodes()),
+    ok = rpc:call(Node, doko_cluster, add_index, [Index, Lang]),
+    Pid = rpc:call(Node, erlang, whereis, [doko_node]),
+    true = rpc:call(Node, erlang, exit, [Pid,kill]),
+    Lang = rpc:call(Node, doko_cluster, index_lang, [Index]),
+    ok.
+
 %%----------------------------------------------------------------------------
 %% CT functions
 %%----------------------------------------------------------------------------
@@ -125,11 +139,11 @@ all() ->
     [{group,systest}].
 
 groups() ->
-    [{systest,[shuffle,sequence,{repeat,10}],[test_queries,
-                                              test_replication,
-                                              test_del_doc,
-                                              test_redundancy,
-                                              test_del_index]}].
+    [{systest,[shuffle,sequence,{repeat,8}],[test_del_doc,
+                                             test_del_index,
+                                             test_queries,
+                                             test_redundancy,
+                                             test_replication]}].
 
 init_per_suite(Config) ->
     Nodes = test_nodes(),
