@@ -3,6 +3,7 @@
 -export([init/0,start_link/0]).
 
 -define(PAUSE, 10).
+-define(USER, doko_node).
 
 -record(state, {table}).
 
@@ -23,7 +24,7 @@ start_link() ->
 %%----------------------------------------------------------------------------
 
 reset(Table) ->
-    case whereis(doko_node) of
+    case whereis(?USER) of
         undefined ->
             timer:sleep(?PAUSE),
             reset(Table);
@@ -44,7 +45,10 @@ loop(State) ->
             loop(State#state{table = Table});
         {'EXIT',_,killed} ->
             reset(State#state.table);
-        _Msg ->
+        {'EXIT',_,shutdown} ->
+            unlink(whereis(?USER)),
+            exit(shutdown);
+        _ ->
             loop(State)
     end.
 
