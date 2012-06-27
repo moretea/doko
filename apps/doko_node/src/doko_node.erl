@@ -14,6 +14,8 @@
 
 -define(SERVER, ?MODULE).
 
+-record(state, {table}).
+
 %%----------------------------------------------------------------------------
 %% API
 %%----------------------------------------------------------------------------
@@ -63,13 +65,13 @@ start_link() ->
 
 %% @private
 init([]) ->
-    {ok,dict:new()}.
+    {ok,#state{}}.
 
 %% @private
-handle_call({get,IndexId}, _Client, Dict = State) ->
-    Reply = case dict:find(IndexId,Dict) of
-                {ok,Value} -> Value;
-                error      -> undefined
+handle_call({get,IndexId}, _Client, State) ->
+    Reply = case ets:lookup(State#state.table, IndexId) of
+                [{IndexId,Lang}] -> Lang;
+                []               -> undefined
             end,
     {reply,Reply,State};
 handle_call(_Request, _Client, State) ->
@@ -77,19 +79,18 @@ handle_call(_Request, _Client, State) ->
     {reply,Reply,State}.
 
 %% @private
-handle_cast({add,IndexId,Lang}, Dict = State) ->
-    NextState = case dict:is_key(IndexId, Dict) of
-                    true  -> State;
-                    false -> dict:store(IndexId, Lang, Dict)
-                end,
-    {noreply,NextState};
-handle_cast({del,IndexId}, Dict = _State) ->
-    NextState = dict:erase(IndexId,Dict),
-    {noreply,NextState};
+handle_cast({add,IndexId,Lang}, State) ->
+    ets:insert_new(State#state.table, {IndexId,Lang}),
+    {noreply,State};
+handle_cast({del,IndexId}, State) ->
+    ets:delete(State#state.table, IndexId),
+    {noreply,State};
 handle_cast(_Msg, State) ->
     {noreply,State}.
 
 %% @private
+handle_info({'ETS-TRANSFER',Table,_From,_GiftData}, State) ->
+    {noreply,State#state{table = Table}};
 handle_info(_Info, State) ->
     {noreply,State}.
 

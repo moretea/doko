@@ -2,6 +2,8 @@
 
 -export([init/0,start_link/0]).
 
+-define(PAUSE, 10).
+
 -record(state, {table}).
 
 %%----------------------------------------------------------------------------
@@ -9,24 +11,42 @@
 %%----------------------------------------------------------------------------
 
 init() ->
-    %% link to table user
-    true = link(whereis(doko_node)),
-    %% trap exits
-    process_flag(trap_exit, true),
-    %% create table
-    %% give table away
-    %% enter main loop
-    loop(#state{}).
-
-loop(State) ->
-    receive
-        _ ->
-            loop(State)
-    end.
+    Table = ets:new(index_conf, [set,protected,{heir,self(),[]}]),
+    reset(Table).
 
 start_link() ->
     Pid = spawn(?MODULE, init, []),
     {ok,Pid}.
+
+%%----------------------------------------------------------------------------
+%% Internal functions
+%%----------------------------------------------------------------------------
+
+reset(Table) ->
+    case whereis(doko_node) of
+        undefined ->
+            timer:sleep(?PAUSE),
+            reset(Table);
+        TableUser ->
+            %% link to table user
+            true = link(TableUser),
+            %% trap exits
+            process_flag(trap_exit, true),
+            %% give table away
+            ets:give_away(Table, TableUser, []),
+            %% enter loop
+            loop(#state{})
+    end.
+
+loop(State) ->
+    receive
+        {'ETS-TRANSFER',Table,_,_} ->
+            loop(State#state{table = Table});
+        {'EXIT',_,killed} ->
+            reset(State#state.table);
+        _Msg ->
+            loop(State)
+    end.
 
 %% Local variables:
 %% mode: erlang
