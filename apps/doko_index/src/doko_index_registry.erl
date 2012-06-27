@@ -26,8 +26,8 @@ server(IndexId, Term, create) ->
                     {server,IndexId,Term,true}).
 
 name(IndexId, N) ->
-    list_to_atom(?MODULE_STRING ++ "[" ++ atom_to_list(IndexId) ++ "]["
-                 ++ integer_to_list(N) ++ "]").
+    list_to_atom(
+      ?MODULE_STRING ++ "[" ++ IndexId ++ "][" ++ integer_to_list(N) ++ "]").
 
 start_link(Name) ->
     gen_server:start_link({local,Name}, ?MODULE, [], []).

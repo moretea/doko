@@ -15,7 +15,7 @@
 %%----------------------------------------------------------------------------
 
 name(IndexId) ->
-    list_to_atom(?MODULE_STRING ++ "[" ++ atom_to_list(IndexId) ++ "]").
+    list_to_atom(?MODULE_STRING ++ "[" ++ IndexId ++ "]").
 
 start_link(IndexId) ->
     supervisor:start_link({local,name(IndexId)}, ?MODULE, [IndexId]).

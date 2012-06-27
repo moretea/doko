@@ -21,7 +21,7 @@
 test_queries(_Config) ->
     Nodes = test_nodes(),
     %% add index
-    Index = index,
+    Index = "index",
     ok = rpc:call(random(Nodes), doko_cluster, add_index, [Index, en]),
     %% add documents
     ok = rpc:call(random(Nodes),
@@ -43,7 +43,7 @@ test_queries(_Config) ->
 test_replication(_Config) ->
     Nodes = test_nodes(),
     %% add index
-    Index = index,
+    Index = "index",
     ok = rpc:call(random(Nodes), doko_cluster, add_index, [Index, en]),
     %% add document
     ok = rpc:call(random(Nodes), doko_ingest, add_doc,
@@ -57,7 +57,7 @@ test_replication(_Config) ->
 test_del_doc(_Config) ->
     Nodes = test_nodes(),
     %% add index
-    Index = index,
+    Index = "index",
     ok = rpc:call(random(Nodes), doko_cluster, add_index, [Index, en]),
     %% add document
     ok = rpc:call(random(Nodes), doko_ingest, add_doc,
@@ -80,7 +80,7 @@ test_del_doc(_Config) ->
 test_redundancy(Config) ->
     Nodes = test_nodes(),
     %% add index
-    Index = index,
+    Index = "index",
     ok = rpc:call(random(Nodes), doko_cluster, add_index, [Index, en]),
     %% add document
     ok = rpc:call(random(Nodes), doko_ingest, add_doc,
@@ -100,7 +100,7 @@ test_redundancy(Config) ->
 test_del_index(_Config) ->
     Nodes = test_nodes(),
     %% add index
-    Index = index,
+    Index = "index",
     ok = rpc:call(random(Nodes), doko_cluster, add_index, [Index, en]),
     timer:sleep(100), % adding indices takes some time 
     Name = doko_index_sup:name(Index),
@@ -122,7 +122,7 @@ test_del_index(_Config) ->
     ok.
 
 test_node_data_persistent(_Config) ->
-    Index = index,
+    Index = "index",
     Lang = en,
     Node = random(test_nodes()),
     ok = rpc:call(Node, doko_cluster, add_index, [Index, Lang]),
