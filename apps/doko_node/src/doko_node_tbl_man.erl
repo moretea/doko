@@ -2,6 +2,8 @@
 
 -export([init/0,start_link/0]).
 
+-record(state, {table}).
+
 %%----------------------------------------------------------------------------
 %% API
 %%----------------------------------------------------------------------------
@@ -14,12 +16,12 @@ init() ->
     %% create table
     %% give table away
     %% enter main loop
-    loop().
+    loop(#state{}).
 
-loop() ->
+loop(State) ->
     receive
         _ ->
-            loop()
+            loop(State)
     end.
 
 start_link() ->
