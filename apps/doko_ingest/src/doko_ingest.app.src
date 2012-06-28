@@ -1,7 +1,0 @@
-%% -*- mode: erlang; fill-column: 78; -*-
-
-{application,doko_ingest,
- [{description,"Ingest Library"},
-  {vsn,"0.1"},
-  {applications,[kernel,stdlib]},
-  {env,[]}]}.

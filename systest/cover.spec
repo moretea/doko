@@ -2,8 +2,8 @@
 
 {incl_dirs_r,[
               "../apps/doko_cluster",
+              "../apps/doko_doc",
               "../apps/doko_index",
-              "../apps/doko_ingest",
               "../apps/doko_node",
               "../apps/doko_query"
              ]}.

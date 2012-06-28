@@ -22,18 +22,18 @@ test_queries(_Config) ->
     Nodes = test_nodes(),
     %% add index
     Index = "index",
-    ok = rpc:call(random(Nodes), doko_cluster, add_index, [Index, en]),
+    ok = rpc:call(random(Nodes), doko_cluster, add_index, [Index,en]),
     %% add documents
-    ok = rpc:call(random(Nodes),
-                  doko_ingest, add_doc, [Index,1,<<"hello world">>]),
-    ok = rpc:call(random(Nodes),
-                  doko_ingest, add_doc, [Index,2,<<"goodbye world">>]),
-    ok = rpc:call(random(Nodes),
-                  doko_ingest, add_doc, [Index,3,<<"aloha world">>]),
+    Doc1 = doko_doc:new(1, [{"body",<<"hello world">>}]),
+    ok = rpc:call(random(Nodes), doko_cluster, add_doc, [Index,Doc1]),
+    Doc2 = doko_doc:new(2, [{"body",<<"goodbye world">>}]),
+    ok = rpc:call(random(Nodes), doko_cluster, add_doc, [Index,Doc2]),
+    Doc3 = doko_doc:new(3, [{"body",<<"aloha world">>}]),
+    ok = rpc:call(random(Nodes), doko_cluster, add_doc, [Index,Doc3]),
     %% test queries
     Result1 = rpc:call(random(Nodes), doko_query, execute,
                        [Index,<<"aloha">>]),
-    timer:sleep(1000),
+    timer:sleep(100),
     [3] = gb_sets:to_list(Result1),
     Result2 = rpc:call(random(Nodes), doko_query, execute,
                        [Index,<<"(hello | goodbye) & world & !aloha">>]),
@@ -46,8 +46,8 @@ test_replication(_Config) ->
     Index = "index",
     ok = rpc:call(random(Nodes), doko_cluster, add_index, [Index, en]),
     %% add document
-    ok = rpc:call(random(Nodes), doko_ingest, add_doc,
-                  [Index,1,<<"hello world">>]),
+    Doc1 = doko_doc:new(1, [{"body",<<"hello world">>}]),
+    ok = rpc:call(random(Nodes), doko_cluster, add_doc, [Index,Doc1]),
     %% test replication
     {Result,[]} = rpc:multicall(Nodes, doko_index, doc_ids,
                                 [Index,<<"hello">>]),
@@ -60,8 +60,8 @@ test_del_doc(_Config) ->
     Index = "index",
     ok = rpc:call(random(Nodes), doko_cluster, add_index, [Index, en]),
     %% add document
-    ok = rpc:call(random(Nodes), doko_ingest, add_doc,
-                  [Index,1,<<"hello world">>]),
+    Doc1 = doko_doc:new(1, [{"body",<<"hello world">>}]),
+    ok = rpc:call(random(Nodes), doko_cluster, add_doc, [Index,Doc1]),
     %% execute query and check result
     Query = fun () ->
                     rpc:call(random(Nodes),
@@ -69,8 +69,7 @@ test_del_doc(_Config) ->
             end,
     [1] = gb_sets:to_list(Query()),
     %% delete document
-    ok = rpc:call(random(Nodes), doko_ingest, del_doc,
-                  [Index,1,<<"hello world">>]),
+    ok = rpc:call(random(Nodes), doko_cluster, del_doc, [Index,Doc1]),
     %% execute query and check result
     Result2 = rpc:call(random(Nodes), doko_query, execute,
                        [Index,<<"hello">>]),
@@ -83,8 +82,8 @@ test_redundancy(Config) ->
     Index = "index",
     ok = rpc:call(random(Nodes), doko_cluster, add_index, [Index, en]),
     %% add document
-    ok = rpc:call(random(Nodes), doko_ingest, add_doc,
-                  [Index,1,<<"hello world">>]),
+    Doc1 = doko_doc:new(1, [{"body",<<"hello world">>}]),
+    ok = rpc:call(random(Nodes), doko_cluster, add_doc, [Index,Doc1]),
     %% stop one of the nodes that has the data
     [Node|_] = rpc:call(random(Nodes), doko_cluster, where,
                         [Index,<<"hello">>]),
@@ -128,6 +127,7 @@ test_node_data_persistent(_Config) ->
     ok = rpc:call(Node, doko_cluster, add_index, [Index, Lang]),
     Pid = rpc:call(Node, erlang, whereis, [doko_node]),
     true = rpc:call(Node, erlang, exit, [Pid,kill]),
+    timer:sleep(100),
     Lang = rpc:call(Node, doko_cluster, index_lang, [Index]),
     ok.
 
@@ -141,6 +141,7 @@ all() ->
 groups() ->
     [{systest,[shuffle,sequence,{repeat,8}],[test_del_doc,
                                              test_del_index,
+                                             test_node_data_persistent,
                                              test_queries,
                                              test_redundancy,
                                              test_replication]}].
