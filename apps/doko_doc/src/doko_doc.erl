@@ -3,8 +3,7 @@
 
 %% API
 -export([new/2,preprocess/2]).
--export([id/1,zone/2]).
--export([zone_ids/1]).
+-export([id/1,uterms/1]).
 
 %%----------------------------------------------------------------------------
 %% API
@@ -25,13 +24,9 @@ preprocess(#doc{id = Id,zones = RawZones,raw = true}, Lang) ->
 id(#doc{id = Id}) ->
     Id.
 
--spec zone(zone_id(), #doc{}) -> utf8_string() | undefined.
-zone(ZoneId, #doc{zones = Zones}) ->
-    proplists:get_value(ZoneId, Zones, undefined).
-
--spec zone_ids(#doc{}) -> nonempty_list(zone_id()).
-zone_ids(#doc{zones = Zones}) ->
-    proplists:get_keys(Zones).
+-spec uterms(#doc{}) -> list(utf8_string()).
+uterms(#doc{zones = Zones,raw = false}) ->
+    lists:usort(lists:flatmap(fun ({_Id,Terms}) -> Terms end, Zones)).
 
 %% Local variables:
 %% mode: erlang
