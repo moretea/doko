@@ -1,12 +1,12 @@
 digraph g {
-        cluster -> "node";
-        doc -> preprocessing;
-        ingest -> doc;
-        ingest -> cluster;
-        "node" -> index;
+        cluster       -> "node";
+        doc           -> preprocessing;
+        ingest        -> doc;
+        ingest        -> cluster;
+        "node"        -> index;
         preprocessing -> stemming;
         preprocessing -> utf8;
-        query -> cluster;
-        query -> preprocessing;
-        stemming -> utf8;
+        query         -> cluster;
+        query         -> preprocessing;
+        stemming      -> utf8;
 }
