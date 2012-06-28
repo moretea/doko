@@ -6,6 +6,7 @@
 %%----------------------------------------------------------------------------
 
 -module(doko_stemming_nl).
+-include("../../doko_utf8/include/doko_utf8.hrl").
 
 %% API
 %% -export([stem/1]).
@@ -18,7 +19,7 @@
 %% API
 %%----------------------------------------------------------------------------
 
--spec stem(doko_utf8:str()) -> doko_utf8:str().
+-spec stem(utf8_string()) -> utf8_string().
 stem(Word)  ->
     Length = doko_utf8:length(Word),
     if
