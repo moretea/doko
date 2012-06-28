@@ -1,15 +1,18 @@
 -module(doko_preprocessing).
--include("../../doko_utf8/include/doko_utf8.hrl").
 
 %% API
+-export_type([iso_639_1/0]).
 -export([uterms/2]).
+
+%% Type declarations
+-type iso_639_1() :: nonempty_string(). % 2 letter language code
 
 %%----------------------------------------------------------------------------
 %% API
 %%----------------------------------------------------------------------------
 
 %% @doc Returns a list of terms with duplicates removed.
--spec uterms(utf8_string(), iso_639_1()) -> [utf8_string()].
+-spec uterms(doko_utf8:str(), iso_639_1()) -> [doko_utf8:str()].
 uterms(Text, Lang) ->
     Str = expand(Text, Lang),
     Mod = list_to_atom("doko_stemming_" ++ atom_to_list(Lang)),

@@ -7,7 +7,6 @@
 %%----------------------------------------------------------------------------
 
 -module(doko_stemming_en).
--include("../../doko_utf8/include/doko_utf8.hrl").
 
 %% API
 -export([stem/1]).
@@ -19,7 +18,7 @@
 %% API
 %%----------------------------------------------------------------------------
 
--spec stem(utf8_string()) -> utf8_string().
+-spec stem(doko_utf8:str()) -> doko_utf8:str().
 stem(<<"andes">>)    -> <<"andes">>;
 stem(<<"atlas">>)    -> <<"atlas">>;
 stem(<<"bias">>)     -> <<"bias">>;
