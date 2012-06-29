@@ -1,30 +1,31 @@
 -module(doko_query).
+-include("../../doko_doc/include/doko_doc.hrl").
 -ifdef(TEST).
 -include_lib("proper/include/proper.hrl").
 -include_lib("eunit/include/eunit.hrl").
 -endif.
 
 %% API
--export([execute/2]).
+%% -export([execute/2]).
+-compile(export_all).
 
 %% Record declarations ("q" is short for "query")
 -record(and_q,  {l_sub_q :: q(), r_sub_q :: q()}).
 -record(or_q,   {l_sub_q :: q(), r_sub_q :: q()}).
--record(not_q,  {sub_q   :: q()}).
--record(term_q, {keyword :: utf8_str()}).
+-record(not_q,  {sub_q :: q()}).
+-record(term_q, {keyword :: utf8_string(), zone_ids :: list(zone_id())}).
 
 %% Type definitions
 -type q() :: {and_q,  q(), q()} |
              {or_q,   q(), q()} |
              {not_q,  q()     } |
-             {term_q, utf8_str()}.
--type utf8_str() :: unicode:unicode_binary().
+             {term_q, utf8_string(), list(zone_id())}.
 
 %%----------------------------------------------------------------------------
 %% API
 %%----------------------------------------------------------------------------
 
--spec execute(atom(), utf8_str()) -> gb_set(). %% TODO: might return an error
+-spec execute(atom(), utf8_string()) -> gb_set(). %% TODO: might return an error
 execute(IndexId, Str) ->
     %% parse and preprocess query
     Clauses = [partition(flatten(X))||X <- clauses(dnf(from_str(Str)))],
@@ -34,7 +35,6 @@ execute(IndexId, Str) ->
     Translate =
         fun (Keyword) ->
                 Lang = doko_cluster:index_lang(IndexId),
-                %% FIXME: hardcoded language
                 Result = case doko_preprocessing:uterms(Keyword, Lang) of
                              []    -> stop_word;
                              Terms -> Terms
@@ -75,31 +75,49 @@ execute(IndexId, Str) ->
 
 %% @doc Converts a UTF-8 string to a query. Returns a query record plus the
 %% depth of the corresponding tree.
--spec from_str(utf8_str()) -> {q(),pos_integer()}.
+-spec from_str(utf8_string()) -> {q(),pos_integer()}.
 from_str(Str) ->
     {ok,ParseTree} = doko_query_parser:parse(scan(Str)),
     tree_to_query(ParseTree).
 
+scan(<<>>) ->
+    [{'$end',1}];
 scan(<<C/utf8,Rest/bytes>>) ->
     case C of
+        %% parentheses
         $( -> [{'(',1}|scan(Rest)];
         $) -> [{')',1}|scan(Rest)];
+        $[ -> [{'[',1}|scan(Rest)];
+        $] -> [{']',1}|scan(Rest)];
+        %% boolean operators
         $& -> [{'&',1}|scan(Rest)];
         $| -> [{'|',1}|scan(Rest)];
         $! -> [{'!',1}|scan(Rest)];
-        32 -> scan(Rest); % skip spaces
-        _  ->
-            Regex = [<<"^([^()&|! ]*)(.*)$">>],
-            Options = [unicode,global,{capture,all_but_first,binary}],
+        %% comma
+        $, -> [{',', 1} | scan(Rest)];
+        %% space (ignored)
+        32 -> scan(Rest);
+        %% begin of a single quoted string
+        $' ->
+            Regex = [<<"^((?:[^'\\\\]|\\\\')*)'(.*)$">>],
+            Options = [unicode,{capture,all_but_first,binary}],
             case re:run(Rest, Regex, Options) of
-                {match,[[Str,RestRest]]} ->
-                    [{string,<<C,Str/bytes>>,1}|scan(RestRest)];
-                _ ->
-                    [{string,<<C>>,1}|scan(Rest)]
+                {match,[String,RestRest]} ->
+                    [{string,String,1}|scan(RestRest)]
+            end;
+        %% begin of a keyword or an ID
+        _ ->
+            Regex = [<<"^([a-z0-9_]*)(.*)$">>],
+            Options = [unicode,{capture,all_but_first,binary}],
+            case re:run(<<C/utf8,Rest/bytes>>, Regex, Options) of
+                {match,[Word,RestRest]} ->
+                    Token = case Word of
+                                <<"in">> -> {'in',1};
+                                Id       -> {id,Id,1}
+                            end,
+                    [Token|scan(RestRest)]
             end
-    end;
-scan(<<>>) ->
-    [{'$end',1}].
+    end.
 
 tree_to_query({and_q,SubTreeL,SubTreeR}) ->
     {L, DepthL} = tree_to_query(SubTreeL),
@@ -112,8 +130,9 @@ tree_to_query({or_q,SubTreeL,SubTreeR}) ->
 tree_to_query({not_q,SubTree}) ->
     {Sub,Depth} = tree_to_query(SubTree),
     {#not_q{sub_q = Sub},Depth+1};
-tree_to_query({term_q,{string,Keyword,_}}) ->
-    {#term_q{keyword = Keyword},0}.
+tree_to_query({term_q,{string,Keyword,_},ZoneIds}) ->
+    Ids = [binary:bin_to_list(Id)||{_,Id,_} <- ZoneIds],
+    {#term_q{keyword  = Keyword,zone_ids = Ids},0}.
 
 %% @doc Rewrites a query to disjunctive normal form.
 -spec dnf({q(),pos_integer()}) -> q().
@@ -127,53 +146,61 @@ dnf(Q, 1) ->
 dnf(Q, D) ->
     dnf(mv_and(Q), D-1).
 
-mv_not({T,L,R}) ->
-    {T,mv_not(L),mv_not(R)};
-mv_not({not_q,{and_q,L,R}}) ->
-    {or_q,mv_not({not_q,L}),mv_not({not_q,R})};
-mv_not({not_q,{or_q,L,R}}) ->
-    {and_q,mv_not({not_q,L}),mv_not({not_q,R})};
-mv_not({not_q,{not_q,Q}}) ->
+mv_not(#and_q{l_sub_q = L,r_sub_q = R}) ->
+    #and_q{l_sub_q = mv_not(L),
+           r_sub_q = mv_not(R)};
+mv_not(#or_q{l_sub_q = L,r_sub_q = R}) ->
+    #or_q{l_sub_q = mv_not(L),
+          r_sub_q = mv_not(R)};
+mv_not(#not_q{sub_q = #and_q{l_sub_q = L,r_sub_q = R}}) ->
+    #or_q{l_sub_q = mv_not(#not_q{sub_q = L}),
+          r_sub_q = mv_not(#not_q{sub_q = R})};
+mv_not(#not_q{sub_q = #or_q{l_sub_q = L,r_sub_q = R}}) ->
+    #and_q{l_sub_q = mv_not(#not_q{sub_q = L}),
+           r_sub_q = mv_not(#not_q{sub_q = R})};
+mv_not(#not_q{sub_q = #not_q{sub_q = Q}}) ->
     mv_not(Q);
 mv_not(Q) ->
     Q.
 
-mv_and({and_q,Q,{or_q,L,R}}) ->
-    {or_q,mv_and({and_q,Q,mv_and(L)}),mv_and({and_q,Q,mv_and(R)})};
-mv_and({and_q,{or_q,L,R},Q}) ->
-    {or_q,mv_and({and_q,Q,mv_and(L)}),mv_and({and_q,Q,mv_and(R)})};
-mv_and({T,L,R}) ->
-    {T,mv_and(L),mv_and(R)};
+mv_and(#and_q{l_sub_q = Q, r_sub_q = #or_q{l_sub_q = L, r_sub_q = R}}) ->
+    #or_q{l_sub_q = #and_q{l_sub_q = Q, r_sub_q = mv_and(L)},
+          r_sub_q = #and_q{l_sub_q = Q, r_sub_q = mv_and(R)}};
+mv_and(#and_q{l_sub_q = #or_q{l_sub_q = L, r_sub_q = R}, r_sub_q = Q}) ->
+    #or_q{l_sub_q = #and_q{l_sub_q = Q, r_sub_q = mv_and(L)},
+          r_sub_q = #and_q{l_sub_q = Q, r_sub_q = mv_and(R)}};
+mv_and(#or_q{l_sub_q = L, r_sub_q = R}) ->
+    #or_q{l_sub_q = mv_and(L), r_sub_q = mv_and(R)};
 mv_and(Q) ->
     Q.
 
 %% @doc Converts a query in DNF to a lists of AND queries.
-clauses({or_q,L,R}) ->
+clauses(#or_q{l_sub_q = L, r_sub_q = R}) ->
     clauses(L) ++ clauses(R);
 clauses(Q) ->
     [Q].
 
 %% @doc Converts an AND clause to  a list of TERM and NOT queries.
-flatten({and_q,L,R}) ->
+flatten(#and_q{l_sub_q = L, r_sub_q = R}) ->
     lists:flatten([flatten(L),flatten(R)]);
 flatten(Q) ->
     [Q].
 
 %% @doc Partitions a list of TERM and NOT queries into two lists, where the
-%% first lists contains all terms in TERM queries and the second list contains
-%% all terms in NOT queries.
+%% first lists contains all terms and zone IDs in TERM queries and the second
+%% list contains all terms and zone IDs in NOT queries.
 partition(Qs) ->
-    {TermQs,NotQs} =
-        lists:partition(fun (Q) -> is_record(Q, term_q) end, Qs),
-    {keywords(TermQs),keywords(NotQs)}.
-
-keywords(Qs) ->
-    lists:usort([keyword(Q)||Q <- Qs]).
-
-keyword(Q = #not_q{}) ->
-    Q#not_q.sub_q#term_q.keyword;
-keyword(Q) ->
-    Q#term_q.keyword.
+    {TermQs,NotQs} = lists:partition(fun (Q) -> is_record(Q, term_q) end, Qs),
+    Destruct = fun (Q) ->
+                       case Q of
+                           #not_q{sub_q = S} ->
+                               {S#term_q.keyword,S#term_q.zone_ids};
+                           _ ->
+                               {Q#term_q.keyword,Q#term_q.zone_ids}
+                       end
+               end,
+    {lists:usort([Destruct(Q)||Q <- TermQs]),
+     lists:usort([Destruct(Q)||Q <- NotQs])}.
 
 %%----------------------------------------------------------------------------
 %% Tests
@@ -189,14 +216,14 @@ proper_test_() ->
 prop_all_not_element() ->
     ?FORALL(X, q(), not_element(dnf({X,depth(X)}))).
 
+not_element(#term_q{}) ->
+    true;
 not_element({_, L, R}) ->
     not_element(L) and not_element(R);
 not_element(#not_q{sub_q = #term_q{}}) ->
     true;
 not_element(#not_q{}) ->
-    false;
-not_element(#term_q{}) ->
-    true.
+    false.
 
 depth({_,L,R}) ->
     max(depth(L),depth(R))+1;
