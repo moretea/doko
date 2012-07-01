@@ -2,7 +2,7 @@
 
 %% API
 -export([add_index/2,del_index/1,index_lang/1]).
--export([add_doc/2,del_doc/2,doc_ids/2]).
+-export([add_doc/1,del_doc/1,doc_ids/2]).
 -export([start/1,stop/0]).
 -export([where/2]).
 
@@ -33,18 +33,18 @@ index_lang(IndexId) ->
     doko_node:index_lang(IndexId).
 
 %% @doc Adds a document.
-add_doc(IndexId, RawDoc) ->
-    Doc = doko_doc:preprocess(RawDoc, index_lang(IndexId)),
-    DocId = doko_doc:id(Doc),
-    Terms = doko_doc:uterms(Doc),
-    foreach_term(add_doc_id, IndexId, DocId, Terms).
+add_doc(Doc) ->
+    foreach_term(add_doc_id,
+                 doko_doc:index_id(Doc),
+                 doko_doc:doc_id(Doc),
+                 doko_doc:uterms(Doc)).
 
 %% @doc Deletes a document.
-del_doc(IndexId, RawDoc) ->
-    Doc = doko_doc:preprocess(RawDoc, index_lang(IndexId)),
-    DocId = doko_doc:id(Doc),
-    Terms = doko_doc:uterms(Doc),
-    foreach_term(del_doc_id, IndexId, DocId, Terms).
+del_doc(Doc) ->
+    foreach_term(del_doc_id,
+                 doko_doc:index_id(Doc),
+                 doko_doc:doc_id(Doc),
+                 doko_doc:uterms(Doc)).
 
 doc_ids(IndexId, Term) ->
     get_doc_ids(IndexId, Term).
