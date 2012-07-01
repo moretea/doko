@@ -1,6 +1,7 @@
 digraph g {
         cluster       -> doc;
         cluster       -> "node";
+        doc           -> cluster;
         doc           -> preprocessing;
         "node"        -> index;
         preprocessing -> stemming;
