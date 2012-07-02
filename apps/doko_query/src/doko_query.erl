@@ -1,6 +1,5 @@
 -module(doko_query).
--include("../../doko_doc/include/doko_doc.hrl").
--ifdef(TEST).
+-ifdef(DISABLED_FOR_NOW).
 -include_lib("proper/include/proper.hrl").
 -include_lib("eunit/include/eunit.hrl").
 -endif.
@@ -13,19 +12,20 @@
 -record(and_q,  {l_sub_q :: q(), r_sub_q :: q()}).
 -record(or_q,   {l_sub_q :: q(), r_sub_q :: q()}).
 -record(not_q,  {sub_q :: q()}).
--record(term_q, {keyword :: utf8_string(), zone_ids :: list(zone_id())}).
+-record(term_q, {keyword :: doko_utf8:str(),
+                 zone_ids :: list(doko_doc:zone_id())}).
 
 %% Type definitions
 -type q() :: {and_q,  q(), q()} |
              {or_q,   q(), q()} |
              {not_q,  q()     } |
-             {term_q, utf8_string(), list(zone_id())}.
+             {term_q, doko_utf8:str(), list(doko_doc:zone_id())}.
 
 %%----------------------------------------------------------------------------
 %% API
 %%----------------------------------------------------------------------------
 
--spec execute(atom(), utf8_string()) -> gb_set(). %% TODO: might return an error
+-spec execute(atom(), doko_utf8:str()) -> gb_set(). %% TODO: might return an error
 execute(IndexId, Str) ->
     %% parse and preprocess query
     Clauses = [partition(flatten(X))||X <- clauses(dnf(from_str(Str)))],
@@ -47,7 +47,7 @@ execute(IndexId, Str) ->
                     DocIds = doko_cluster:doc_ids(IndexId, Term),
                     {Term,DocIds}
             end,
-    UniqueTerms = 
+    UniqueTerms =
         lists:flatten(
           [Value||{_Key,Value} <- dict:to_list(Terms), Value /= stop_word]),
     Data = dict:from_list(plists:map(Fetch, UniqueTerms)),
@@ -75,7 +75,7 @@ execute(IndexId, Str) ->
 
 %% @doc Converts a UTF-8 string to a query. Returns a query record plus the
 %% depth of the corresponding tree.
--spec from_str(utf8_string()) -> {q(),pos_integer()}.
+-spec from_str(doko_utf8:str()) -> {q(),pos_integer()}.
 from_str(Str) ->
     {ok,ParseTree} = doko_query_parser:parse(scan(Str)),
     tree_to_query(ParseTree).
@@ -206,7 +206,7 @@ partition(Qs) ->
 %% Tests
 %%----------------------------------------------------------------------------
 
--ifdef(TEST).
+-ifdef(DISABLED_FOR_NOW).
 
 proper_test_() ->
     [{atom_to_list(F),
