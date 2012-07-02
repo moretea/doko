@@ -2,7 +2,7 @@
 
 %% API
 -export([add_index/2,del_index/1,index_lang/1]).
--export([add_doc/1,del_doc/1,doc_ids/2]).
+-export([add_doc/2,del_doc/2,doc_ids/2]).
 -export([start/1,stop/0]).
 -export([where/2]).
 
@@ -33,18 +33,14 @@ index_lang(IndexId) ->
     doko_node:index_lang(IndexId).
 
 %% @doc Adds a document.
-add_doc(Doc) ->
-    foreach_term(add_doc_id,
-                 doko_doc:index_id(Doc),
-                 doko_doc:doc_id(Doc),
-                 doko_doc:uterms(Doc)).
+add_doc(IndexId, Doc) ->
+    foreach_term(add_doc_id, IndexId, doko_doc:doc_id(Doc),
+                 doko_doc:terms_x_zones(Doc)).
 
 %% @doc Deletes a document.
-del_doc(Doc) ->
-    foreach_term(del_doc_id,
-                 doko_doc:index_id(Doc),
-                 doko_doc:doc_id(Doc),
-                 doko_doc:uterms(Doc)).
+del_doc(IndexId, Doc) ->
+    foreach_term(del_doc_id, IndexId, doko_doc:doc_id(Doc),
+                 doko_doc:terms_x_zones(Doc)).
 
 doc_ids(IndexId, Term) ->
     get_doc_ids(IndexId, Term).
@@ -70,17 +66,18 @@ where(IndexId, Term) ->
     Start = 1 + erlang:trunc((Vnode / ?RING_SIZE) * length(Nodes)),
     lists:sublist(Nodes ++ Nodes, Start, ?N_DUPS).
 
-foreach_term(Fun, IndexId, DocId, Terms) ->
+foreach_term(Fun, IndexId, DocId, Tuples) ->
     plists:foreach(
-      fun (Term) ->
+      fun ({Term, ZoneIds}) ->
               %% TODO: choose appropriate timeout
               Timeout = infinity,
               %% TODO: handle errors
               {_,_} = rpc:multicall(where(IndexId, Term),
-                                    doko_node, Fun, [IndexId,Term,DocId],
+                                    doko_node, Fun,
+                                    [IndexId, Term, DocId, ZoneIds],
                                     Timeout)
       end,
-      Terms).
+      Tuples).
 
 get_doc_ids(IndexId, Term) ->
     Caller = self(),

@@ -2,35 +2,27 @@
 
 %% API
 -export([new/3]).
--export([index_id/1, doc_id/1, terms_x_zones/1]).
--export_type([doc/0, doc_id/0, index_id/0, zone_id/0]).
+-export([doc_id/1, terms_x_zones/1]).
+-export_type([doc/0, doc_id/0, zone_id/0]).
 
 %% Type declarations
--type index_id() :: nonempty_string().
 -type doc_id() :: pos_integer().
 -type zone_id() :: nonempty_string().
 -type zone() :: {zone_id(), doko_utf8:str()}.
 
 %% Record definitions
--record(doc, {index_id :: index_id(),
-              doc_id :: doc_id(),
-              zones :: dict()}).
+-record(doc, {doc_id :: doc_id(), zones :: dict()}).
 -opaque doc() :: #doc{}.
 
 %%----------------------------------------------------------------------------
 %% API
 %%----------------------------------------------------------------------------
 
--spec new(index_id(), doc_id(), [zone(), ...]) -> doc().
-new(IndexId, DocId, Zones) ->
-    Lang = doko_cluster:index_lang(IndexId),
+-spec new(doc_id(), [zone(), ...], doko_utf8:iso_639_1()) -> doc().
+new(DocId, Zones, Lang) ->
     Preprocess = fun (Text) -> doko_preprocessing:uterms(Text, Lang) end,
     List = [{ZoneId, Preprocess(Text)} || {ZoneId, Text} <- Zones],
-    #doc{index_id = IndexId, doc_id = DocId, zones = dict:from_list(List)}.
-
--spec index_id(doc()) -> index_id().
-index_id(#doc{index_id = IndexId}) ->
-    IndexId.
+    #doc{doc_id = DocId, zones = dict:from_list(List)}.
 
 -spec doc_id(doc()) -> doc_id().
 doc_id(#doc{doc_id = DocId}) ->
