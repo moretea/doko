@@ -2,13 +2,14 @@
 -compile({no_auto_import,[length/1]}).
 
 %% API
--export_type([str/0]).
 -export([length/1]).
 -export([has_mb_char/1,suffix/2]).
 -export([case_fold/1,reverse/1]).
 -export([substr/2,substr/3]).
+-export_type([str/0, iso_639_1/0]).
 
 %% Type declarations
+-type iso_639_1() :: nonempty_string. % 2 letter language code
 -type str() :: unicode:unicode_binary().
 
 %%----------------------------------------------------------------------------

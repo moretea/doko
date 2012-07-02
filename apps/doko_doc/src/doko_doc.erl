@@ -1,5 +1,4 @@
 -module(doko_doc).
--include("../../doko_utf8/include/doko_utf8.hrl").
 
 %% API
 -export([new/3]).
@@ -10,7 +9,7 @@
 -type index_id() :: nonempty_string().
 -type doc_id() :: pos_integer().
 -type zone_id() :: nonempty_string().
--type zone() :: {zone_id(), utf8_string()}.
+-type zone() :: {zone_id(), doko_utf8:str()}.
 
 %% Record definitions
 -record(doc, {index_id :: index_id(),
@@ -37,7 +36,7 @@ index_id(#doc{index_id = IndexId}) ->
 doc_id(#doc{doc_id = DocId}) ->
     DocId.
 
--spec terms_x_zones(doc()) -> [{utf8_string(), [zone_id(), ...]}].
+-spec terms_x_zones(doc()) -> [{doko_utf8:str(), [zone_id(), ...]}].
 terms_x_zones(#doc{zones = Zones}) ->
     dict:to_list(
       lists:foldl(
