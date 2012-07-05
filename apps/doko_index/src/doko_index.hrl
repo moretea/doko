@@ -2,7 +2,7 @@
 %% Macro definitions
 %%----------------------------------------------------------------------------
 
--define(SIZE, 1024).
+-define(SIZE, 8).
 
 %% Local variables:
 %% mode: erlang

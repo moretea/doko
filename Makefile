@@ -10,4 +10,4 @@ eunit: all
 ct: all
 	@ERL_LIBS=apps rebar ct apps=doko_stemming
 
-test: eunit ct
+test: clean eunit ct

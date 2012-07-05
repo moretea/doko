@@ -24,7 +24,7 @@ del_doc_id(IndexId, Term, DocId, ZoneIds) ->
 
 doc_ids(IndexId, Term) ->
     case doko_index_registry:server(IndexId, Term) of
-        undefined -> gb_sets:empty();
+        undefined -> dict:new();
         Server    -> doko_index_term:doc_ids(Server)
     end.
 

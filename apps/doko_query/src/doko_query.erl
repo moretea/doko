@@ -31,7 +31,8 @@ execute(IndexId, Str) ->
     Clauses = [partition(flatten(X))||X <- clauses(dnf(from_str(Str)))],
     %% translate keywords to terms
     UniqueKeywords =
-        lists:usort(lists:flatten([Xs++Ys||{Xs,Ys} <- Clauses])),
+        lists:usort(lists:map(fun (X) -> element(1, X) end,
+                              lists:flatten([Xs++Ys||{Xs,Ys} <- Clauses]))),
     Translate =
         fun (Keyword) ->
                 Lang = doko_cluster:index_lang(IndexId),
@@ -43,23 +44,33 @@ execute(IndexId, Str) ->
         end,
     Terms = dict:from_list(lists:map(Translate, UniqueKeywords)),
     %% fetch data
-    Fetch = fun (Term) ->
-                    DocIds = doko_cluster:doc_ids(IndexId, Term),
-                    {Term,DocIds}
-            end,
+    Fetch = fun (Term) -> {Term, doko_cluster:doc_ids(IndexId, Term)} end,
     UniqueTerms =
         lists:flatten(
           [Value||{_Key,Value} <- dict:to_list(Terms), Value /= stop_word]),
     Data = dict:from_list(plists:map(Fetch, UniqueTerms)),
     %% calculate result
-    DocIds = fun (Keyword) ->
-                     case dict:fetch(Keyword, Terms) of
-                         stop_word ->
-                             gb_sets:empty();
-                         Result ->
-                             [dict:fetch(X,Data)||X <- Result]
-                     end
-             end,
+    DocIdsForZoneIds =
+        fun (ZoneIds, Dict) ->
+                case ZoneIds of
+                    [] ->
+                        dict:fetch(any, Dict);
+                    _ ->
+                        gb_sets:union(
+                          [element(2,Y) || X <- ZoneIds,
+                                           Y <- dict:find(X, Dict),
+                                           Y /= error])
+                end
+        end,
+    DocIds =
+        fun ({Keyword, ZoneIds}) ->
+                io:format("Keyword = ~p~n", [Keyword]),
+                io:format("ZoneIds = ~p~n", [ZoneIds]),
+                case dict:fetch(Keyword, Terms) of
+                    stop_word -> gb_sets:empty();
+                    Term -> DocIdsForZoneIds(ZoneIds, dict:fetch(Term, Data))
+                end
+        end,
     Calculate = fun ({Keywords,NotKeywords}) ->
                         gb_sets:subtract(
                           gb_sets:intersection(
