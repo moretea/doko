@@ -16,12 +16,12 @@
 %%----------------------------------------------------------------------------
 
 add_doc_id(Server, DocId, ZoneIds) ->
-    gen_server:cast(Server, {add, DocId, [all | ZoneIds]}).
+    gen_server:cast(Server, {add, DocId, [any | ZoneIds]}).
 
 del_doc_id(Server, DocId, ZoneIds) ->
     case Server of
         undefined -> ok;
-        _ -> gen_server:cast(Server, {del, DocId, [all | ZoneIds]})
+        _ -> gen_server:cast(Server, {del, DocId, [any | ZoneIds]})
     end.
 
 doc_ids(Server) ->
@@ -36,7 +36,7 @@ start_link() ->
 
 %% @private
 init([]) ->
-    Dict = dict:from_list([{all, gb_sets:empty()}]),
+    Dict = dict:from_list([{any, gb_sets:empty()}]),
     {ok, Dict}.
 
 %% @private
