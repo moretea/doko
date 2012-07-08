@@ -47,21 +47,30 @@ handle_call(_Request, _Client, State) ->
     {reply,Reply,State}.
 
 %% @private
-handle_cast({add, DocId, DocZoneIds}, Dict0 = _State) ->
+handle_cast({add, DocId, ZoneIds}, Dict0 = _State) ->
     Fun = fun (ZoneId, Dict) ->
                   Set = case dict:find(ZoneId, Dict) of
                             {ok, OldSet} ->
-                                gb_sets:add(DocId, OldSet);
+                                gb_sets:add_element(DocId, OldSet);
                             error ->
                                 gb_sets:from_list([DocId])
                         end,
                   dict:store(ZoneId, Set, Dict)
           end,
-    NextState = lists:foldl(Fun, Dict0, DocZoneIds),
+    NextState = lists:foldl(Fun, Dict0, ZoneIds),
     {noreply,NextState};
-handle_cast({del, _DocId, _ZoneIds}, _Dict0 = State) ->
-    %% TODO: IT NO WORKY!!! (http://dilbert.com/strips/comic/2010-03-17/)
-    {noreply, State};
+handle_cast({del, DocId, ZoneIds}, Dict0 = _State) ->
+    Fun = fun (ZoneId, Dict) ->
+                  Set = case dict:find(ZoneId, Dict) of
+                            {ok, OldSet} ->
+                                gb_sets:del_element(DocId, OldSet);
+                            error ->
+                                gb_sets:empty()
+                        end,
+                  dict:store(ZoneId, Set, Dict)
+          end,
+    NextState = lists:foldl(Fun, Dict0, ZoneIds),
+    {noreply,NextState};
 handle_cast(_Msg, State) ->
     {noreply,State}.
 
