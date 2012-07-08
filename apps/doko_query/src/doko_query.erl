@@ -156,19 +156,15 @@ dnf(Q, 1) ->
 dnf(Q, D) ->
     dnf(mv_and(Q), D-1).
 
-mv_not(#and_q{l_sub_q = L,r_sub_q = R}) ->
-    #and_q{l_sub_q = mv_not(L),
-           r_sub_q = mv_not(R)};
-mv_not(#or_q{l_sub_q = L,r_sub_q = R}) ->
-    #or_q{l_sub_q = mv_not(L),
-          r_sub_q = mv_not(R)};
-mv_not(#not_q{sub_q = #and_q{l_sub_q = L,r_sub_q = R}}) ->
-    #or_q{l_sub_q = mv_not(#not_q{sub_q = L}),
-          r_sub_q = mv_not(#not_q{sub_q = R})};
-mv_not(#not_q{sub_q = #or_q{l_sub_q = L,r_sub_q = R}}) ->
-    #and_q{l_sub_q = mv_not(#not_q{sub_q = L}),
-           r_sub_q = mv_not(#not_q{sub_q = R})};
-mv_not(#not_q{sub_q = #not_q{sub_q = Q}}) ->
+mv_not({and_q, L, R}) ->
+    {and_q, mv_not(L), mv_not(R)};
+mv_not({or_q, L, R}) ->
+    {or_q, mv_not(L), mv_not(R)};
+mv_not({not_q, {and_q, L, R}}) ->
+    {or_q, mv_not({not_q, L}), mv_not({not_q, R})};
+mv_not({not_q, {or_q, L, R}}) ->
+    {and_q, mv_not({not_q, L}), mv_not({not_q, R})};
+mv_not({not_q, {not_q, Q}}) ->
     mv_not(Q);
 mv_not(Q) ->
     Q.
@@ -185,14 +181,14 @@ mv_and(Q) ->
     Q.
 
 %% @doc Converts a query in DNF to a lists of AND queries.
-clauses(#or_q{l_sub_q = L, r_sub_q = R}) ->
+clauses({or_q, L, R}) ->
     clauses(L) ++ clauses(R);
 clauses(Q) ->
     [Q].
 
 %% @doc Converts an AND clause to  a list of TERM and NOT queries.
-flatten(#and_q{l_sub_q = L, r_sub_q = R}) ->
-    lists:flatten([flatten(L),flatten(R)]);
+flatten({and_q, L, R}) ->
+    lists:flatten([flatten(L), flatten(R)]);
 flatten(Q) ->
     [Q].
 
