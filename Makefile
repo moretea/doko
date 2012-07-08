@@ -4,13 +4,13 @@ all:
 clean:
 	@rebar clean
 
-eunit: all
+eunit:
 	@rebar eunit skip_deps=true apps=doko_query,doko_utf8
 
-ct: all
+ct:
 	@ERL_LIBS=apps rebar ct apps=doko_stemming
 
-systest: all
+systest:
 	@./systest.pl
 
-test: clean eunit ct systest
+test: clean all eunit ct systest
