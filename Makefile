@@ -10,4 +10,7 @@ eunit: all
 ct: all
 	@ERL_LIBS=apps rebar ct apps=doko_stemming
 
-test: clean eunit ct
+systest: all
+	@./systest.pl
+
+test: clean eunit ct systest
