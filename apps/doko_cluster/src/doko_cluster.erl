@@ -4,10 +4,6 @@
 -export([add_index/2,del_index/1,index_lang/1]).
 -export([add_doc/2,del_doc/2,doc_ids/2]).
 -export([start/1,stop/0]).
--export([where/2]).
-
--define(RING_SIZE, 420). % number of virtual nodes
--define(N_DUPS, 2). % number of duplicates
 
 %%----------------------------------------------------------------------------
 %% API
@@ -60,19 +56,14 @@ stop() ->
 %% Internal functions
 %%----------------------------------------------------------------------------
 
-where(IndexId, Term) ->
-    {ok,Nodes} = application:get_env(doko_cluster, nodes),
-    Vnode = erlang:phash2({IndexId,Term}, ?RING_SIZE),
-    Start = 1 + erlang:trunc((Vnode / ?RING_SIZE) * length(Nodes)),
-    lists:sublist(Nodes ++ Nodes, Start, ?N_DUPS).
-
 foreach_term(Fun, IndexId, DocId, Tuples) ->
     plists:foreach(
       fun ({Term, ZoneIds}) ->
               %% TODO: choose appropriate timeout
               Timeout = infinity,
               %% TODO: handle errors
-              {_,_} = rpc:multicall(where(IndexId, Term),
+              Nodes = doko_routing:whereto({invix, IndexId, Term}),
+              {_,_} = rpc:multicall(Nodes,
                                     doko_node, Fun,
                                     [IndexId, Term, DocId, ZoneIds],
                                     Timeout)
@@ -103,13 +94,14 @@ doc_ids_receiver(Caller, Tag, IndexId, Term) ->
                       %% caller died before sending us the go-ahead
                       exit(normal);
                   {Caller,Tag} ->
+                      Nodes = doko_routing:wherefrom({invix, IndexId, term}),
                       Keys = lists:map(
                                fun (Node) ->
                                        rpc:async_call(Node,
                                                       doko_node, doc_ids,
                                                       [IndexId,Term])
                                end,
-                               where(IndexId, Term)),
+                               Nodes),
                       Result = yield(Keys, 1, length(Keys)),
                       exit({self(),Tag,Result})
               end
