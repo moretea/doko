@@ -5,8 +5,7 @@
 -endif.
 
 %% API
-%% -export([execute/2]).
--compile(export_all).
+-export([execute/2]).
 
 %% Record declarations ("q" is short for "query")
 -record(and_q,  {l_sub_q :: q(), r_sub_q :: q()}).
@@ -174,14 +173,14 @@ mv_not(#not_q{sub_q = #not_q{sub_q = Q}}) ->
 mv_not(Q) ->
     Q.
 
-mv_and(#and_q{l_sub_q = Q, r_sub_q = #or_q{l_sub_q = L, r_sub_q = R}}) ->
-    #or_q{l_sub_q = #and_q{l_sub_q = Q, r_sub_q = mv_and(L)},
-          r_sub_q = #and_q{l_sub_q = Q, r_sub_q = mv_and(R)}};
-mv_and(#and_q{l_sub_q = #or_q{l_sub_q = L, r_sub_q = R}, r_sub_q = Q}) ->
-    #or_q{l_sub_q = #and_q{l_sub_q = Q, r_sub_q = mv_and(L)},
-          r_sub_q = #and_q{l_sub_q = Q, r_sub_q = mv_and(R)}};
-mv_and(#or_q{l_sub_q = L, r_sub_q = R}) ->
-    #or_q{l_sub_q = mv_and(L), r_sub_q = mv_and(R)};
+mv_and({and_q, Q, {or_q, L, R}}) ->
+    {or_q, mv_and({and_q, Q, mv_and(L)}), mv_and({and_q, Q, mv_and(R)})};
+mv_and({and_q, {or_q, L, R}, Q}) ->
+    {or_q, mv_and({and_q, Q, mv_and(L)}), mv_and({and_q, Q, mv_and(R)})};
+mv_and({and_q, L, R}) ->
+    {and_qT, mv_and(L), mv_and(R)};
+mv_and({or_q, L, R}) ->
+    {or_q, mv_and(L), mv_and(R)};
 mv_and(Q) ->
     Q.
 
@@ -248,11 +247,11 @@ depth(_) ->
 prop_no_nested_or() ->
     ?FORALL(X, q(), not nested_or(dnf({X,depth(X)}))).
 
-nested_or({or_q,L,R}) ->
-    nested_or(L) or nested_or(R);
 nested_or({and_q,L,R}) ->
     (is_record(L, or_q) or is_record(R, or_q))
         orelse (nested_or(L) or nested_or(R));
+nested_or({or_q,L,R}) ->
+    nested_or(L) or nested_or(R);
 nested_or({not_q,Q}) ->
     nested_or(Q);
 nested_or(_) ->
