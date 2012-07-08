@@ -13,6 +13,8 @@
 %% API
 %%----------------------------------------------------------------------------
 
+%% @doc Adds an index.
+-spec add_index(index_id(), doko_utf8:iso_639_1()) -> ok.
 add_index(IndexId, Lang) ->
     {ok,Nodes} = application:get_env(doko_cluster, nodes),
     %% TODO: choose appropriate timeout
@@ -21,6 +23,8 @@ add_index(IndexId, Lang) ->
     rpc:multicall(Nodes, doko_node, add_index, [IndexId, Lang], Timeout),
     ok.
 
+%% @doc Deletes an index.
+-spec del_index(index_id()) -> ok.
 del_index(IndexId) ->
     {ok,Nodes} = application:get_env(doko_cluster, nodes),
     %% TODO: choose appropriate timeout
@@ -29,23 +33,30 @@ del_index(IndexId) ->
     rpc:multicall(Nodes, doko_node, del_index, [IndexId], Timeout),
     ok.
 
+%% @doc Returns the language of an index.
+-spec index_lang(index_id()) -> doko_utf8:iso_639_1().
 index_lang(IndexId) ->
     doko_node:index_lang(IndexId).
 
 %% @doc Adds a document.
+-spec add_doc(index_id(), doko_doc:doc()) -> ok.
 add_doc(IndexId, Doc) ->
     foreach_term(add_doc_id, IndexId, doko_doc:doc_id(Doc),
                  doko_doc:terms_x_zones(Doc)).
 
 %% @doc Deletes a document.
+-spec del_doc(index_id(), doko_doc:doc()) -> ok.
 del_doc(IndexId, Doc) ->
     foreach_term(del_doc_id, IndexId, doko_doc:doc_id(Doc),
                  doko_doc:terms_x_zones(Doc)).
 
+%% @doc Returns the IDs of all documents that contain a certain term.
+-spec doc_ids(index_id(), doko_utf8:str()) -> [doko_doc:doc_id()].
 doc_ids(IndexId, Term) ->
     get_doc_ids(IndexId, Term).
 
 %% @doc Starts the application.
+-spec start([node(), ...]) -> ok.
 start(Nodes) ->
     %% TODO: check if number of nodes is at least equal to number of
     %% duplicates
@@ -53,6 +64,7 @@ start(Nodes) ->
     application:start(doko_cluster).
 
 %% @doc Stops the application.
+-spec stop() -> ok.
 stop() ->
     application:stop(doko_cluster).
 

@@ -18,16 +18,21 @@
 %% API
 %%----------------------------------------------------------------------------
 
+%% @doc Constructs a document.
 -spec new(doc_id(), [zone(), ...], doko_utf8:iso_639_1()) -> doc().
 new(DocId, Zones, Lang) ->
     Preprocess = fun (Text) -> doko_preprocessing:uterms(Text, Lang) end,
     List = [{ZoneId, Preprocess(Text)} || {ZoneId, Text} <- Zones],
     #doc{doc_id = DocId, zones = dict:from_list(List)}.
 
+%% @doc Returns the ID of a document.
 -spec doc_id(doc()) -> doc_id().
 doc_id(#doc{doc_id = DocId}) ->
     DocId.
 
+%% @doc Returns a list of tuples (one tuple for every unique term in a
+%% document). The first element of every tuple is a term. The second element
+%% is a list of IDs of zones in which that term appears.
 -spec terms_x_zones(doc()) -> [{doko_utf8:str(), [zone_id(), ...]}].
 terms_x_zones(#doc{zones = Zones}) ->
     dict:to_list(
