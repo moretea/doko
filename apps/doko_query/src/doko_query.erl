@@ -15,9 +15,9 @@
                  zone_ids :: list(doko_doc:zone_id())}).
 
 %% Type definitions
--type q() :: {and_q,  q(), q()} |
-             {or_q,   q(), q()} |
-             {not_q,  q()     } |
+-type q() :: {and_q, q(), q()} |
+             {or_q,  q(), q()} |
+             {not_q, q()} |
              {term_q, string(), list(string())}.
 
 %%----------------------------------------------------------------------------
@@ -27,26 +27,27 @@
 -spec execute(atom(), doko_utf8:str()) -> gb_set().
 execute(IndexId, Str) ->
     %% parse and preprocess query
-    Clauses = [partition(flatten(X))||X <- clauses(dnf(from_str(Str)))],
+    Clauses = [partition(flatten(X)) || X <- clauses(dnf(from_str(Str)))],
     %% translate keywords to terms
     UniqueKeywords =
-        lists:usort(lists:map(fun (X) -> element(1, X) end,
-                              lists:flatten([Xs++Ys||{Xs,Ys} <- Clauses]))),
+        lists:usort(
+          lists:map(fun (X) -> element(1, X) end,
+                    lists:flatten([Xs ++ Ys || {Xs, Ys} <- Clauses]))),
     Translate =
         fun (Keyword) ->
                 Lang = doko_cluster:index_lang(IndexId),
                 Result = case doko_preprocessing:uterms(Keyword, Lang) of
-                             []    -> stop_word;
+                             [] -> stop_word;
                              Terms -> Terms
                          end,
-                {Keyword,Result}
+                {Keyword, Result}
         end,
     Terms = dict:from_list(lists:map(Translate, UniqueKeywords)),
     %% fetch data
     Fetch = fun (Term) -> {Term, doko_cluster:doc_ids(IndexId, Term)} end,
     UniqueTerms =
         lists:flatten(
-          [Value||{_Key,Value} <- dict:to_list(Terms), Value /= stop_word]),
+          [Value || {_, Value} <- dict:to_list(Terms), Value /= stop_word]),
     Data = dict:from_list(plists:map(Fetch, UniqueTerms)),
     %% calculate result
     DocIdsForZoneIds =
@@ -56,9 +57,9 @@ execute(IndexId, Str) ->
                         dict:fetch(any, Dict);
                     _ ->
                         gb_sets:union(
-                          [element(2, Y)
-                           || Y <- [dict:find(X, Dict) || X <- ZoneIds],
-                              Y /= error])
+                          [element(2, X)
+                           || X <- [dict:find(Y, Dict) || Y <- ZoneIds],
+                              X /= error])
                 end
         end,
     DocIds =
@@ -73,9 +74,9 @@ execute(IndexId, Str) ->
     Calculate = fun ({Keywords,NotKeywords}) ->
                         gb_sets:subtract(
                           gb_sets:intersection(
-                            lists:flatten([DocIds(X)||X <- Keywords])),
+                            lists:flatten([DocIds(X) || X <- Keywords])),
                           gb_sets:union(
-                            lists:flatten([DocIds(X)||X <- NotKeywords])))
+                            lists:flatten([DocIds(X) || X <- NotKeywords])))
                 end,
     gb_sets:union(plists:map(Calculate, Clauses)).
 
@@ -91,70 +92,70 @@ from_str(Str) ->
     tree_to_query(ParseTree).
 
 scan(<<>>) ->
-    [{'$end',1}];
-scan(<<C/utf8,Rest/bytes>>) ->
+    [{'$end', 1}];
+scan(<<C/utf8, Rest/bytes>>) ->
     case C of
         %% parentheses
-        $( -> [{'(',1}|scan(Rest)];
-        $) -> [{')',1}|scan(Rest)];
-        $[ -> [{'[',1}|scan(Rest)];
-        $] -> [{']',1}|scan(Rest)];
+        $( -> [{'(', 1} | scan(Rest)];
+        $) -> [{')', 1} | scan(Rest)];
+        $[ -> [{'[', 1} | scan(Rest)];
+        $] -> [{']', 1} | scan(Rest)];
         %% boolean operators
-        $& -> [{'&',1}|scan(Rest)];
-        $| -> [{'|',1}|scan(Rest)];
-        $! -> [{'!',1}|scan(Rest)];
+        $& -> [{'&', 1} | scan(Rest)];
+        $| -> [{'|', 1} | scan(Rest)];
+        $! -> [{'!', 1} | scan(Rest)];
         %% comma
-        $, -> [{',', 1} | scan(Rest)];
+        $, -> [{',',  1} | scan(Rest)];
         %% space (ignored)
         32 -> scan(Rest);
         %% begin of a single quoted string
         $' ->
             Regex = [<<"^((?:[^'\\\\]|\\\\')*)'(.*)$">>],
-            Options = [unicode,{capture,all_but_first,binary}],
+            Options = [unicode, {capture, all_but_first, binary}],
             case re:run(Rest, Regex, Options) of
-                {match,[String,RestRest]} ->
-                    [{string,String,1}|scan(RestRest)]
+                {match, [String, RestRest]} ->
+                    [{string, String, 1} | scan(RestRest)]
             end;
         %% begin of a keyword or an ID
         _ ->
             Regex = [<<"^([a-z0-9_]*)(.*)$">>],
-            Options = [unicode,{capture,all_but_first,binary}],
+            Options = [unicode, {capture, all_but_first, binary}],
             case re:run(<<C/utf8,Rest/bytes>>, Regex, Options) of
-                {match,[Word,RestRest]} ->
+                {match, [Word, RestRest]} ->
                     Token = case Word of
-                                <<"in">> -> {'in',1};
-                                Id       -> {id,Id,1}
+                                <<"in">> -> {'in', 1};
+                                Id -> {id, Id, 1}
                             end,
                     [Token|scan(RestRest)]
             end
     end.
 
-tree_to_query({and_q,SubTreeL,SubTreeR}) ->
+tree_to_query({and_q, SubTreeL, SubTreeR}) ->
     {L, DepthL} = tree_to_query(SubTreeL),
     {R, DepthR} = tree_to_query(SubTreeR),
-    {#and_q{l_sub_q = L,r_sub_q = R},max(DepthL, DepthR)+1};
-tree_to_query({or_q,SubTreeL,SubTreeR}) ->
+    {#and_q{l_sub_q = L,r_sub_q = R}, 1 + max(DepthL, DepthR)};
+tree_to_query({or_q, SubTreeL, SubTreeR}) ->
     {L, DepthL} = tree_to_query(SubTreeL),
     {R, DepthR} = tree_to_query(SubTreeR),
-    {#or_q{l_sub_q = L,r_sub_q = R},max(DepthL, DepthR)+1};
-tree_to_query({not_q,SubTree}) ->
+    {#or_q{l_sub_q = L, r_sub_q = R}, 1 + max(DepthL, DepthR)};
+tree_to_query({not_q, SubTree}) ->
     {Sub,Depth} = tree_to_query(SubTree),
-    {#not_q{sub_q = Sub},Depth+1};
-tree_to_query({term_q,{string,Keyword,_},ZoneIds}) ->
-    Ids = [binary:bin_to_list(Id)||{_,Id,_} <- ZoneIds],
-    {#term_q{keyword  = Keyword,zone_ids = Ids},0}.
+    {#not_q{sub_q = Sub}, 1 + Depth};
+tree_to_query({term_q, {string, Keyword, _}, ZoneIds}) ->
+    Ids = [binary:bin_to_list(Id) || {_, Id, _} <- ZoneIds],
+    {#term_q{keyword  = Keyword, zone_ids = Ids}, 0}.
 
 %% @doc Rewrites a query to disjunctive normal form.
 -spec dnf({q(),pos_integer()}) -> q().
-dnf({Q,0}) ->
+dnf({Q, 0}) ->
     Q;
-dnf({Q,D}) ->
+dnf({Q, D}) ->
     dnf(mv_not(Q), D).
 
 dnf(Q, 1) ->
     Q;
 dnf(Q, D) ->
-    dnf(mv_and(Q), D-1).
+    dnf(mv_and(Q), D - 1).
 
 mv_not({and_q, L, R}) ->
     {and_q, mv_not(L), mv_not(R)};
@@ -200,7 +201,7 @@ partition(Qs) ->
     Destruct = fun (Q) ->
                        case Q of
                            #not_q{sub_q = S} ->
-                               {S#term_q.keyword,S#term_q.zone_ids};
+                               {S#term_q.keyword, S#term_q.zone_ids};
                            #term_q{keyword = Keyword, zone_ids = ZoneIds} ->
                                {Keyword, ZoneIds}
                        end
@@ -231,24 +232,24 @@ not_element(#not_q{sub_q = #term_q{}}) ->
 not_element(#not_q{}) ->
     false.
 
-depth({and_q,L,R}) ->
-    max(depth(L),depth(R))+1;
+depth({and_q, L, R}) ->
+    1 + max(depth(L), depth(R));
 depth({or_q,L,R}) ->
-    max(depth(L),depth(R))+1;
+    1 + max(depth(L), depth(R));
 depth({not_q,Q}) ->
-    depth(Q)+1;
+    1 + depth(Q);
 depth(_) ->
     0.
 
 prop_no_nested_or() ->
-    ?FORALL(X, q(), not nested_or(dnf({X,depth(X)}))).
+    ?FORALL(X, q(), not nested_or(dnf({X, depth(X)}))).
 
-nested_or({and_q,L,R}) ->
+nested_or({and_q, L, R}) ->
     (is_record(L, or_q) or is_record(R, or_q))
         orelse (nested_or(L) or nested_or(R));
-nested_or({or_q,L,R}) ->
+nested_or({or_q, L, R}) ->
     nested_or(L) or nested_or(R);
-nested_or({not_q,Q}) ->
+nested_or({not_q, Q}) ->
     nested_or(Q);
 nested_or(_) ->
     false.
