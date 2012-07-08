@@ -4,6 +4,10 @@
 -export([add_index/2,del_index/1,index_lang/1]).
 -export([add_doc/2,del_doc/2,doc_ids/2]).
 -export([start/1,stop/0]).
+-export_type([index_id/0]).
+
+%% Type declarations
+-type index_id() :: nonempty_string().
 
 %%----------------------------------------------------------------------------
 %% API
