@@ -1,3 +1,5 @@
+.PHONY: systest
+
 all:
 	@rebar compile
 
