@@ -25,6 +25,8 @@ whereto(DataId) ->
 wherefrom(DataId) ->
     where(DataId).
 
+invix_data_id(IndexId, Term) ->
+    {invix, IndexId, Term}.
 
 %%----------------------------------------------------------------------------
 %% Internal functions
