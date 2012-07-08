@@ -19,12 +19,15 @@
 %% API
 %%----------------------------------------------------------------------------
 
+-spec whereto(data_id()) -> [node(), ...].
 whereto(DataId) ->
     where(DataId).
 
+-spec wherefrom(data_id()) -> [node(), ...].
 wherefrom(DataId) ->
     where(DataId).
 
+-spec invix_data_id(doko_cluster:index_id(), doko_utf8:str()) -> data_id().
 invix_data_id(IndexId, Term) ->
     {invix, IndexId, Term}.
 
