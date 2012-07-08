@@ -2,6 +2,14 @@
 
 %% API
 -export([whereto/1, wherefrom/1]).
+-export([invix_data_id/2]).
+-export_type([data_id/0]).
+
+%% Type declarations
+-opaque invix_data_id() :: {'invix',
+                            doko_cluster:index_id(),
+                            doko_utf8:str()}.
+-type data_id() :: invix_data_id().
 
 %% Macro definitions
 -define(RING_SIZE, 420). % number of virtual nodes
@@ -16,6 +24,7 @@ whereto(DataId) ->
 
 wherefrom(DataId) ->
     where(DataId).
+
 
 %%----------------------------------------------------------------------------
 %% Internal functions
