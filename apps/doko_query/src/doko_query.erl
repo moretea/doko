@@ -175,7 +175,7 @@ mv_and({and_q, Q, {or_q, L, R}}) ->
 mv_and({and_q, {or_q, L, R}, Q}) ->
     {or_q, mv_and({and_q, Q, mv_and(L)}), mv_and({and_q, Q, mv_and(R)})};
 mv_and({and_q, L, R}) ->
-    {and_qT, mv_and(L), mv_and(R)};
+    {and_q, mv_and(L), mv_and(R)};
 mv_and({or_q, L, R}) ->
     {or_q, mv_and(L), mv_and(R)};
 mv_and(Q) ->
