@@ -1,5 +1,5 @@
 -module(doko_query).
--ifdef(DISABLED_FOR_NOW).
+-ifdef(TEST).
 -include_lib("proper/include/proper.hrl").
 -include_lib("eunit/include/eunit.hrl").
 -endif.
@@ -19,13 +19,13 @@
 -type q() :: {and_q,  q(), q()} |
              {or_q,   q(), q()} |
              {not_q,  q()     } |
-             {term_q, doko_utf8:str(), list(doko_doc:zone_id())}.
+             {term_q, string(), list(string())}.
 
 %%----------------------------------------------------------------------------
 %% API
 %%----------------------------------------------------------------------------
 
--spec execute(atom(), doko_utf8:str()) -> gb_set(). %% TODO: might return an error
+-spec execute(atom(), doko_utf8:str()) -> gb_set().
 execute(IndexId, Str) ->
     %% parse and preprocess query
     Clauses = [partition(flatten(X))||X <- clauses(dnf(from_str(Str)))],
@@ -57,18 +57,18 @@ execute(IndexId, Str) ->
                         dict:fetch(any, Dict);
                     _ ->
                         gb_sets:union(
-                          [element(2,Y) || X <- ZoneIds,
-                                           Y <- dict:find(X, Dict),
-                                           Y /= error])
+                          [element(2, Y)
+                           || Y <- [dict:find(X, Dict) || X <- ZoneIds],
+                              Y /= error])
                 end
         end,
     DocIds =
         fun ({Keyword, ZoneIds}) ->
-                io:format("Keyword = ~p~n", [Keyword]),
-                io:format("ZoneIds = ~p~n", [ZoneIds]),
                 case dict:fetch(Keyword, Terms) of
                     stop_word -> gb_sets:empty();
-                    Term -> DocIdsForZoneIds(ZoneIds, dict:fetch(Term, Data))
+                    [Term] ->
+                        Dict = dict:fetch(Term, Data),
+                        DocIdsForZoneIds(ZoneIds, Dict)
                 end
         end,
     Calculate = fun ({Keywords,NotKeywords}) ->
@@ -206,8 +206,8 @@ partition(Qs) ->
                        case Q of
                            #not_q{sub_q = S} ->
                                {S#term_q.keyword,S#term_q.zone_ids};
-                           _ ->
-                               {Q#term_q.keyword,Q#term_q.zone_ids}
+                           #term_q{keyword = Keyword, zone_ids = ZoneIds} ->
+                               {Keyword, ZoneIds}
                        end
                end,
     {lists:usort([Destruct(Q)||Q <- TermQs]),
@@ -217,7 +217,7 @@ partition(Qs) ->
 %% Tests
 %%----------------------------------------------------------------------------
 
--ifdef(DISABLED_FOR_NOW).
+-ifdef(TEST).
 
 proper_test_() ->
     [{atom_to_list(F),
@@ -236,7 +236,9 @@ not_element(#not_q{sub_q = #term_q{}}) ->
 not_element(#not_q{}) ->
     false.
 
-depth({_,L,R}) ->
+depth({and_q,L,R}) ->
+    max(depth(L),depth(R))+1;
+depth({or_q,L,R}) ->
     max(depth(L),depth(R))+1;
 depth({not_q,Q}) ->
     depth(Q)+1;
@@ -246,11 +248,11 @@ depth(_) ->
 prop_no_nested_or() ->
     ?FORALL(X, q(), not nested_or(dnf({X,depth(X)}))).
 
-nested_or({q,L,R}) ->
-    (is_record(L, or_q) or is_record(R, or_q))
-        orelse (nested_or(L) or nested_or(R));
 nested_or({or_q,L,R}) ->
     nested_or(L) or nested_or(R);
+nested_or({and_q,L,R}) ->
+    (is_record(L, or_q) or is_record(R, or_q))
+        orelse (nested_or(L) or nested_or(R));
 nested_or({not_q,Q}) ->
     nested_or(Q);
 nested_or(_) ->
