@@ -1,5 +1,4 @@
 -module(doko_utf8).
--include("../include/doko_utf8.hrl").
 -compile({no_auto_import,[length/1]}).
 
 %% API
@@ -7,25 +6,30 @@
 -export([has_mb_char/1,suffix/2]).
 -export([case_fold/1,reverse/1]).
 -export([substr/2,substr/3]).
+-export_type([str/0, iso_639_1/0]).
+
+%% Type declarations
+-type iso_639_1() :: nonempty_string. % 2 letter language code
+-type str() :: unicode:unicode_binary().
 
 %%----------------------------------------------------------------------------
 %% API
 %%----------------------------------------------------------------------------
 
 %% @doc Returns the length of a UTF-8 string.
--spec length(utf8_string()) -> non_neg_integer().
+-spec length(str()) -> non_neg_integer().
 length(<<>>) ->
     0;
 length(<<_Char/utf8,Rest/bytes>>) ->
     1 + length(Rest).
 
 %% @doc Returns true if a UTF-8 string contains a multibyte character.
--spec has_mb_char(utf8_string()) -> boolean().
+-spec has_mb_char(str()) -> boolean().
 has_mb_char(Str) ->
     lists:any(fun (C) -> C >= 128 end, binary:bin_to_list(Str)).
 
 %% @doc Returns true if a UTF-8 string ends with the given suffix.
--spec suffix(utf8_string(), utf8_string()) -> boolean().
+-spec suffix(str(), str()) -> boolean().
 suffix(Suffix, Str) ->
     Xiffus = reverse(Suffix),
     Rts = reverse(Str),
@@ -36,12 +40,12 @@ suffix(Suffix, Str) ->
     end.
 
 %% @doc Simple case folding. See [http://www.unicode.org/reports/tr44/].
--spec case_fold(utf8_string()) -> utf8_string().
+-spec case_fold(str()) -> str().
 case_fold(Str) ->
     << <<(char_fold(C))/utf8>> || <<C/utf8>> <= Str >>.
 
 %% @doc Reverses a UTF-8 string.
--spec reverse(utf8_string()) -> utf8_string().
+-spec reverse(str()) -> str().
 reverse(<<>>) ->
     <<>>;
 reverse(_Str = <<Char/utf8,Rest/bytes>>) ->
@@ -50,7 +54,7 @@ reverse(_Str = <<Char/utf8,Rest/bytes>>) ->
 %% @doc Extracts a substring. The substring starts at the given position. The
 %% first character is at position 0. If the position is negative, then the
 %% substring starts that far from the end of the string.
--spec substr(utf8_string(), integer()) -> utf8_string().
+-spec substr(str(), integer()) -> str().
 substr(<<>>, _) ->
     <<>>;
 substr(Str, 0) ->
@@ -64,7 +68,7 @@ substr(Str, Start) when Start < 0 ->
 %% it has the given length. If the length is negative, then the substring ends
 %% that far from the end of the string. The start position can not be
 %% negative.
--spec substr(utf8_string(), pos_integer(), integer()) -> utf8_string().
+-spec substr(str(), pos_integer(), integer()) -> str().
 substr(_, _, 0) ->
     <<>>;
 substr(Str, Start, Length) when Length > 0 ->

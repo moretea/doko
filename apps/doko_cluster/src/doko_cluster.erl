@@ -2,17 +2,19 @@
 
 %% API
 -export([add_index/2,del_index/1,index_lang/1]).
--export([add_doc/3,del_doc/3,doc_ids/2]).
+-export([add_doc/2,del_doc/2,doc_ids/2]).
 -export([start/1,stop/0]).
--export([where/2]).
+-export_type([index_id/0]).
 
--define(RING_SIZE, 420). % number of virtual nodes
--define(N_DUPS, 2). % number of duplicates
+%% Type declarations
+-type index_id() :: nonempty_string().
 
 %%----------------------------------------------------------------------------
 %% API
 %%----------------------------------------------------------------------------
 
+%% @doc Adds an index.
+-spec add_index(index_id(), doko_utf8:iso_639_1()) -> ok.
 add_index(IndexId, Lang) ->
     {ok,Nodes} = application:get_env(doko_cluster, nodes),
     %% TODO: choose appropriate timeout
@@ -21,6 +23,8 @@ add_index(IndexId, Lang) ->
     rpc:multicall(Nodes, doko_node, add_index, [IndexId, Lang], Timeout),
     ok.
 
+%% @doc Deletes an index.
+-spec del_index(index_id()) -> ok.
 del_index(IndexId) ->
     {ok,Nodes} = application:get_env(doko_cluster, nodes),
     %% TODO: choose appropriate timeout
@@ -29,21 +33,30 @@ del_index(IndexId) ->
     rpc:multicall(Nodes, doko_node, del_index, [IndexId], Timeout),
     ok.
 
+%% @doc Returns the language of an index.
+-spec index_lang(index_id()) -> doko_utf8:iso_639_1().
 index_lang(IndexId) ->
     doko_node:index_lang(IndexId).
 
 %% @doc Adds a document.
-add_doc(IndexId, DocId, Terms) ->
-    foreach_term(add_doc_id, IndexId, DocId, Terms).
+-spec add_doc(index_id(), doko_doc:doc()) -> ok.
+add_doc(IndexId, Doc) ->
+    foreach_term(add_doc_id, IndexId, doko_doc:doc_id(Doc),
+                 doko_doc:terms_x_zones(Doc)).
 
 %% @doc Deletes a document.
-del_doc(IndexId, DocId, Terms) ->
-    foreach_term(del_doc_id, IndexId, DocId, Terms).
+-spec del_doc(index_id(), doko_doc:doc()) -> ok.
+del_doc(IndexId, Doc) ->
+    foreach_term(del_doc_id, IndexId, doko_doc:doc_id(Doc),
+                 doko_doc:terms_x_zones(Doc)).
 
+%% @doc Returns the IDs of all documents that contain a certain term.
+-spec doc_ids(index_id(), doko_utf8:str()) -> [doko_doc:doc_id()].
 doc_ids(IndexId, Term) ->
     get_doc_ids(IndexId, Term).
 
 %% @doc Starts the application.
+-spec start([node(), ...]) -> ok.
 start(Nodes) ->
     %% TODO: check if number of nodes is at least equal to number of
     %% duplicates
@@ -51,6 +64,7 @@ start(Nodes) ->
     application:start(doko_cluster).
 
 %% @doc Stops the application.
+-spec stop() -> ok.
 stop() ->
     application:stop(doko_cluster).
 
@@ -58,23 +72,20 @@ stop() ->
 %% Internal functions
 %%----------------------------------------------------------------------------
 
-where(IndexId, Term) ->
-    {ok,Nodes} = application:get_env(doko_cluster, nodes),
-    Vnode = erlang:phash2({IndexId,Term}, ?RING_SIZE),
-    Start = 1 + erlang:trunc((Vnode / ?RING_SIZE) * length(Nodes)),
-    lists:sublist(Nodes ++ Nodes, Start, ?N_DUPS).
-
-foreach_term(Fun, IndexId, DocId, Terms) ->
+foreach_term(Fun, IndexId, DocId, Tuples) ->
     plists:foreach(
-      fun (Term) ->
+      fun ({Term, ZoneIds}) ->
               %% TODO: choose appropriate timeout
               Timeout = infinity,
               %% TODO: handle errors
-              {_,_} = rpc:multicall(where(IndexId, Term),
-                                    doko_node, Fun, [IndexId,Term,DocId],
+              Nodes = doko_routing:whereto(
+                        doko_routing:invix_data_id(IndexId, Term)),
+              {_,_} = rpc:multicall(Nodes,
+                                    doko_node, Fun,
+                                    [IndexId, Term, DocId, ZoneIds],
                                     Timeout)
       end,
-      Terms).
+      Tuples).
 
 get_doc_ids(IndexId, Term) ->
     Caller = self(),
@@ -100,13 +111,15 @@ doc_ids_receiver(Caller, Tag, IndexId, Term) ->
                       %% caller died before sending us the go-ahead
                       exit(normal);
                   {Caller,Tag} ->
+                      DataId = doko_routing:invix_data_id(IndexId, Term),
+                      Nodes = doko_routing:wherefrom(DataId),
                       Keys = lists:map(
                                fun (Node) ->
                                        rpc:async_call(Node,
                                                       doko_node, doc_ids,
                                                       [IndexId,Term])
                                end,
-                               where(IndexId, Term)),
+                               Nodes),
                       Result = yield(Keys, 1, length(Keys)),
                       exit({self(),Tag,Result})
               end
