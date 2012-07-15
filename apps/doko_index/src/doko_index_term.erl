@@ -4,26 +4,24 @@
 -behaviour(gen_server).
 
 %% API
--export([add_doc_id/2,del_doc_id/2,doc_ids/1]).
+-export([add_doc_id/3, del_doc_id/3, doc_ids/1]).
 -export([start_link/0]).
 
 %% gen_server callbacks
 -export([init/1,handle_call/3,handle_cast/2,handle_info/2,terminate/2,
          code_change/3]).
 
--define(SERVER, ?MODULE).
-
 %%----------------------------------------------------------------------------
 %% API
 %%----------------------------------------------------------------------------
 
-add_doc_id(Server, DocId) ->
-    gen_server:cast(Server, {add,DocId}).
+add_doc_id(Server, DocId, ZoneIds) ->
+    gen_server:cast(Server, {add, DocId, [any | ZoneIds]}).
 
-del_doc_id(Server, DocId) ->
+del_doc_id(Server, DocId, ZoneIds) ->
     case Server of
         undefined -> ok;
-        _         -> gen_server:cast(Server, {del,DocId})
+        _ -> gen_server:cast(Server, {del, DocId, [any | ZoneIds]})
     end.
 
 doc_ids(Server) ->
@@ -38,21 +36,40 @@ start_link() ->
 
 %% @private
 init([]) ->
-    {ok,gb_sets:empty()}.
+    Dict = dict:from_list([{any, gb_sets:empty()}]),
+    {ok, Dict}.
 
 %% @private
-handle_call(get, _Client, Set = State) ->
-    {reply,Set,State};
+handle_call(get, _Client, Dict = State) ->
+    {reply,Dict,State};
 handle_call(_Request, _Client, State) ->
     Reply = ok,
     {reply,Reply,State}.
 
 %% @private
-handle_cast({add,DocId}, Set = _State) ->
-    NextState = gb_sets:add_element(DocId, Set),
+handle_cast({add, DocId, ZoneIds}, Dict0 = _State) ->
+    Fun = fun (ZoneId, Dict) ->
+                  Set = case dict:find(ZoneId, Dict) of
+                            {ok, OldSet} ->
+                                gb_sets:add_element(DocId, OldSet);
+                            error ->
+                                gb_sets:from_list([DocId])
+                        end,
+                  dict:store(ZoneId, Set, Dict)
+          end,
+    NextState = lists:foldl(Fun, Dict0, ZoneIds),
     {noreply,NextState};
-handle_cast({del,DocId}, Set = _State) ->
-    NextState = gb_sets:del_element(DocId, Set),
+handle_cast({del, DocId, ZoneIds}, Dict0 = _State) ->
+    Fun = fun (ZoneId, Dict) ->
+                  Set = case dict:find(ZoneId, Dict) of
+                            {ok, OldSet} ->
+                                gb_sets:del_element(DocId, OldSet);
+                            error ->
+                                gb_sets:empty()
+                        end,
+                  dict:store(ZoneId, Set, Dict)
+          end,
+    NextState = lists:foldl(Fun, Dict0, ZoneIds),
     {noreply,NextState};
 handle_cast(_Msg, State) ->
     {noreply,State}.

@@ -4,7 +4,7 @@
 
 %% API
 -export([add_index/2,del_index/1,index_lang/1]).
--export([add_doc_id/3,del_doc_id/3,doc_ids/2]).
+-export([add_doc_id/4, del_doc_id/4,doc_ids/2]).
 -export([start/0,stop/0]).
 -export([start_link/0]).
 
@@ -39,11 +39,11 @@ del_index(IndexId) ->
 index_lang(IndexId) ->
     gen_server:call(?SERVER, {get,IndexId}).
 
-add_doc_id(IndexId, Term, DocId) ->
-    doko_index:add_doc_id(IndexId, Term, DocId).
+add_doc_id(IndexId, Term, DocId, ZoneIds) ->
+    doko_index:add_doc_id(IndexId, Term, DocId, ZoneIds).
 
-del_doc_id(IndexId, Term, DocId) ->
-    doko_index:del_doc_id(IndexId, Term, DocId).
+del_doc_id(IndexId, Term, DocId, ZoneIds) ->
+    doko_index:del_doc_id(IndexId, Term, DocId, ZoneIds).
 
 doc_ids(IndexId, Term) ->
     doko_index:doc_ids(IndexId, Term).

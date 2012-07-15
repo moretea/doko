@@ -7,7 +7,6 @@
 %%----------------------------------------------------------------------------
 
 -module(doko_stemming_en).
--include("../../doko_utf8/include/doko_utf8.hrl").
 
 %% API
 -export([stem/1]).
@@ -19,7 +18,7 @@
 %% API
 %%----------------------------------------------------------------------------
 
--spec stem(utf8_string()) -> utf8_string().
+-spec stem(doko_utf8:str()) -> doko_utf8:str().
 stem(<<"andes">>)    -> <<"andes">>;
 stem(<<"atlas">>)    -> <<"atlas">>;
 stem(<<"bias">>)     -> <<"bias">>;
@@ -110,7 +109,7 @@ step1b(Word) ->
     Ing = doko_utf8:suffix(<<"ing">>, Word),
     Ingly = doko_utf8:suffix(<<"ingly">>, Word),
     if
-        Eed -> 
+        Eed ->
             case doko_utf8:suffix(<<"eed">>, R1) of
                 true  -> doko_utf8:substr(Word, 0, -1);
                 false -> Word
@@ -272,7 +271,7 @@ step5(Word) ->
             doko_utf8:substr(Word, 0, -1);
         R1E ->
             NewWord = doko_utf8:substr(Word, 0, -1),
-            case short_syllable(doko_utf8:substr(NewWord, -3)) of 
+            case short_syllable(doko_utf8:substr(NewWord, -3)) of
                 false -> doko_utf8:substr(Word, 0, -1);
                 true  -> Word
             end;
