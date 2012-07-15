@@ -80,20 +80,39 @@ test_queries(_Config) ->
     Index = "index",
     ok = rpc:call(random(Nodes), doko_cluster, add_index, [Index,en]),
     %% add documents
-    Doc1 = doko_doc:new(1, [{"body",<<"hello world">>}], en),
+    Body1 = <<"hello world is a very popular programming example">>,
+    Doc1 =
+        doko_doc:new(1, [{"title", <<"hello world">>}, {"body", Body1}], en),
     ok = rpc:call(random(Nodes), doko_cluster, add_doc, [Index,Doc1]),
-    Doc2 = doko_doc:new(2, [{"body",<<"goodbye world">>}], en),
+    Body2 = <<"goodbye world could be the next big thing in programming ",
+              "examples">>,
+    Doc2 = doko_doc:new(2, [{"title", <<"goodbye world">>}, {"body", Body2}],
+                        en),
     ok = rpc:call(random(Nodes), doko_cluster, add_doc, [Index,Doc2]),
-    Doc3 = doko_doc:new(3, [{"body",<<"aloha world">>}], en),
+    Body3 = <<"aloha world combines both hello world and goodbye world">>,
+    Doc3 =
+        doko_doc:new(3, [{"title",<<"aloha world">>}, {"body", Body3}], en),
     ok = rpc:call(random(Nodes), doko_cluster, add_doc, [Index,Doc3]),
     %% test queries
-    Result1 = rpc:call(random(Nodes), doko_query, execute,
-                       [Index,<<"'aloha'">>]),
-    timer:sleep(100),
+    Query1 = <<"'aloha'">>,
+    Result1 = rpc:call(random(Nodes), doko_query, execute, [Index, Query1]),
     [3] = gb_sets:to_list(Result1),
-    Query = <<"('hello' | 'goodbye') & 'world' & !'aloha'">>,
-    Result2 = rpc:call(random(Nodes), doko_query, execute, [Index, Query]),
+    Query2 = <<"('hello' | 'goodbye') & 'world' & !'aloha'">>,
+    Result2 = rpc:call(random(Nodes), doko_query, execute, [Index, Query2]),
     [1,2] = lists:sort(gb_sets:to_list(Result2)),
+    %% test document zones in queries
+    Query3 = <<"'hello' in title">>,
+    Result3 = rpc:call(random(Nodes), doko_query, execute, [Index, Query3]),
+    [1] = lists:sort(gb_sets:to_list(Result3)),
+    Query4 = <<"'hello' in body">>,
+    Result4 = rpc:call(random(Nodes), doko_query, execute, [Index, Query4]),
+    [1,3] = lists:sort(gb_sets:to_list(Result4)),
+    Query5 = <<"'hello' in body | 'goodbye' in title">>,
+    Result5 = rpc:call(random(Nodes), doko_query, execute, [Index, Query5]),
+    [1,2,3] = lists:sort(gb_sets:to_list(Result5)),
+    Query6 = <<"'hello' in body & !('aloha' in title)">>,
+    Result6 = rpc:call(random(Nodes), doko_query, execute, [Index, Query6]),
+    [1] = lists:sort(gb_sets:to_list(Result6)),
     ok.
 
 test_redundancy(Config) ->
