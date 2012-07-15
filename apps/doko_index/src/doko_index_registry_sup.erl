@@ -27,7 +27,7 @@ start_link(IndexId) ->
 
 init([IndexId]) ->
     {ok, {{one_for_one, 5, 10},
-          [child_spec(IndexId, N)||N <- lists:seq(0, ?SIZE - 1)]}}.
+          [child_spec(IndexId, N) || N <- lists:seq(0, ?SIZE - 1)]}}.
 
 %%----------------------------------------------------------------------------
 %% Internal functions
