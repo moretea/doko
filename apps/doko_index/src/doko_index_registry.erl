@@ -4,12 +4,12 @@
 -behaviour(gen_server).
 
 %% API
--export([server/2,server/3]).
+-export([server/2, server/3]).
 -export([name/1]).
 -export([start_link/1]).
 
 %% gen_server callbacks
--export([init/1,handle_call/3,handle_cast/2,handle_info/2,terminate/2,
+-export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2,
          code_change/3]).
 
 %%----------------------------------------------------------------------------
@@ -39,14 +39,14 @@ init([]) ->
     {ok, State}.
 
 %% @private
-handle_call({server,IndexId,Term,Create}, _From, Dict = State) ->
+handle_call({server, IndexId, Term, Create}, _From, Dict = State) ->
     Reply =
         case {sdict:find(Term, Dict),Create} of
-            {{ok,Value},_} ->
+            {{ok, Value}, _} ->
                 Value;
-            {error,false} ->
+            {error, false} ->
                 undefined;
-            {error,true} ->
+            {error, true} ->
                 SupRef = doko_index_term_sup:name(IndexId),
                 {ok, Server} = supervisor:start_child(SupRef, []),
                 sdict:store(Term, Server, Dict),
@@ -71,7 +71,7 @@ terminate(_Reason, _State) ->
 
 %% @private
 code_change(_OldVsn, State, _Extra) ->
-    {ok,State}.
+    {ok, State}.
 
 %% Local variables:
 %% mode: erlang
