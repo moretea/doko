@@ -1,16 +1,15 @@
 %% @private
 -module(doko_index_registry).
--include("doko_index.hrl").
 
 -behaviour(gen_server).
 
 %% API
--export([server/2,server/3]).
--export([name/2]).
+-export([server/2, server/3]).
+-export([name/1]).
 -export([start_link/1]).
 
 %% gen_server callbacks
--export([init/1,handle_call/3,handle_cast/2,handle_info/2,terminate/2,
+-export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2,
          code_change/3]).
 
 %%----------------------------------------------------------------------------
@@ -18,20 +17,16 @@
 %%----------------------------------------------------------------------------
 
 server(IndexId, Term) ->
-    gen_server:call(name(IndexId, erlang:phash2(Term, ?SIZE)),
-                    {server,IndexId,Term,false}).
+    gen_server:call(name(IndexId), {server, IndexId, Term, false}).
 
 server(IndexId, Term, create) ->
-    gen_server:call(name(IndexId, erlang:phash2(Term, ?SIZE)),
-                    {server,IndexId,Term,true}).
+    gen_server:call(name(IndexId), {server, IndexId, Term, true}).
 
-name(IndexId, N) ->
-    list_to_atom(
-      ?MODULE_STRING ++ "[" ++ IndexId ++ "][" ++ integer_to_list(N) ++ "]").
+name(IndexId) ->
+    list_to_atom(?MODULE_STRING ++ "[" ++ IndexId ++ "]").
 
-start_link(Name) ->
-    gen_server:start_link({local,Name}, ?MODULE, [], []).
-
+start_link(IndexId) ->
+    gen_server:start_link({local, name(IndexId)}, ?MODULE, [], []).
 
 %%----------------------------------------------------------------------------
 %% gen_server callbacks
@@ -39,34 +34,36 @@ start_link(Name) ->
 
 %% @private
 init([]) ->
-    {ok,dict:new()}.
+    {ok, Dict} = sdict:start_link(),
+    State = Dict,
+    {ok, State}.
 
 %% @private
-handle_call({server,IndexId,Term,Create}, _From, Dict = State) ->
-    {Server,NextState} =
-        case {dict:find(Term, Dict),Create} of
-            {{ok,Value},_} ->
-                {Value,State};
-            {error,false} ->
-                {undefined,State};
-            {error,true} ->
+handle_call({server, IndexId, Term, Create}, _From, Dict = State) ->
+    Reply =
+        case {sdict:find(Term, Dict),Create} of
+            {{ok, Value}, _} ->
+                Value;
+            {error, false} ->
+                undefined;
+            {error, true} ->
                 SupRef = doko_index_term_sup:name(IndexId),
-                {ok,NewServer} =
-                    supervisor:start_child(SupRef, []),
-                {NewServer,dict:store(Term, NewServer, Dict)}
+                {ok, Server} = supervisor:start_child(SupRef, []),
+                sdict:store(Term, Server, Dict),
+                Server
         end,
-    {reply,Server,NextState};
+    {reply, Reply, State};
 handle_call(_Request, _From, State) ->
     Reply = ok,
-    {reply,Reply,State}.
+    {reply, Reply, State}.
 
 %% @private
 handle_cast(_Msg, State) ->
-    {noreply,State}.
+    {noreply, State}.
 
 %% @private
 handle_info(_Info, State) ->
-    {noreply,State}.
+    {noreply, State}.
 
 %% @private
 terminate(_Reason, _State) ->
@@ -74,7 +71,7 @@ terminate(_Reason, _State) ->
 
 %% @private
 code_change(_OldVsn, State, _Extra) ->
-    {ok,State}.
+    {ok, State}.
 
 %% Local variables:
 %% mode: erlang
