@@ -78,7 +78,7 @@ foreach_term(Fun, IndexId, DocId, Tuples) ->
               %% TODO: choose appropriate timeout
               Timeout = infinity,
               %% TODO: handle errors
-              Nodes = doko_routing:whereto(
+              Nodes = doko_routing:to(
                         doko_routing:invix_data_id(IndexId, Term)),
               {_, _} = rpc:multicall(Nodes,
                                      doko_node, Fun,
