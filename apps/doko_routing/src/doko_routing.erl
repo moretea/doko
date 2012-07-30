@@ -1,7 +1,7 @@
 -module(doko_routing).
 
 %% API
--export([to/1, wherefrom/1]).
+-export([to/1, from/1]).
 -export([invix_data_id/2]).
 -export_type([data_id/0]).
 
@@ -23,8 +23,8 @@
 to(DataId) ->
     where(DataId).
 
--spec wherefrom(data_id()) -> [node(), ...].
-wherefrom(DataId) ->
+-spec from(data_id()) -> [node(), ...].
+from(DataId) ->
     where(DataId).
 
 -spec invix_data_id(doko_cluster:index_id(), doko_utf8:str()) -> data_id().

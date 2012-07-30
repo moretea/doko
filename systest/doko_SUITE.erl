@@ -125,7 +125,7 @@ test_redundancy(Config) ->
     ok = rpc:call(random(Nodes), doko_cluster, add_doc, [Index,Doc1]),
     %% stop one of the nodes that has the data
     DataId = doko_routing:invix_data_id(Index, <<"hello">>),
-    [Node | _] = rpc:call(random(Nodes), doko_routing, wherefrom, [DataId]),
+    [Node | _] = rpc:call(random(Nodes), doko_routing, from, [DataId]),
     slave:stop(Node),
     %% execute query and check result
     Result = rpc:call(random(lists:delete(Node,Nodes)),

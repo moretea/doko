@@ -112,7 +112,7 @@ doc_ids_receiver(Caller, Tag, IndexId, Term) ->
                       exit(normal);
                   {Caller, Tag} ->
                       DataId = doko_routing:invix_data_id(IndexId, Term),
-                      Nodes = doko_routing:wherefrom(DataId),
+                      Nodes = doko_routing:from(DataId),
                       Keys = lists:map(
                                fun (Node) ->
                                        rpc:async_call(Node,
