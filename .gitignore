@@ -10,6 +10,8 @@
 /apps/doko_query/src/doko_query_parser.erl
 /data/
 /deps/
+/doc/apps-dependencies.png
+/doc/apps-dependencies.ps
 /fprof.trace
 /nonpublic/
 ebin/
