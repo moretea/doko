@@ -1,9 +1,9 @@
 -module(doko_cluster).
 
 %% API
--export([add_index/2,del_index/1,index_lang/1]).
--export([add_doc/2,del_doc/2,doc_ids/2]).
--export([start/1,stop/0]).
+-export([add_index/2, del_index/1, index_lang/1]).
+-export([add_doc/2, del_doc/2, doc_ids/2]).
+-export([start/1, stop/0]).
 -export_type([index_id/0]).
 
 %% Type declarations
@@ -16,7 +16,7 @@
 %% @doc Adds an index.
 -spec add_index(index_id(), doko_utf8:iso_639_1()) -> ok.
 add_index(IndexId, Lang) ->
-    {ok,Nodes} = application:get_env(doko_cluster, nodes),
+    {ok, Nodes} = application:get_env(doko_cluster, nodes),
     %% TODO: choose appropriate timeout
     Timeout = infinity,
     %% TODO: handle errors
@@ -26,7 +26,7 @@ add_index(IndexId, Lang) ->
 %% @doc Deletes an index.
 -spec del_index(index_id()) -> ok.
 del_index(IndexId) ->
-    {ok,Nodes} = application:get_env(doko_cluster, nodes),
+    {ok, Nodes} = application:get_env(doko_cluster, nodes),
     %% TODO: choose appropriate timeout
     Timeout = infinity,
     %% TODO: handle errors
@@ -80,10 +80,10 @@ foreach_term(Fun, IndexId, DocId, Tuples) ->
               %% TODO: handle errors
               Nodes = doko_routing:whereto(
                         doko_routing:invix_data_id(IndexId, Term)),
-              {_,_} = rpc:multicall(Nodes,
-                                    doko_node, Fun,
-                                    [IndexId, Term, DocId, ZoneIds],
-                                    Timeout)
+              {_, _} = rpc:multicall(Nodes,
+                                     doko_node, Fun,
+                                     [IndexId, Term, DocId, ZoneIds],
+                                     Timeout)
       end,
       Tuples).
 
@@ -92,11 +92,11 @@ get_doc_ids(IndexId, Term) ->
     Tag = make_ref(),
     Receiver = doc_ids_receiver(Caller, Tag, IndexId, Term),
     Mref = monitor(process, Receiver),
-    Receiver ! {Caller,Tag},
+    Receiver ! {Caller, Tag},
     receive
-        {'DOWN',Mref,_,_,{Receiver,Tag,Result}} ->
+        {'DOWN', Mref, _, _, {Receiver, Tag, Result}} ->
             Result;
-        {'DOWN',Mref,_,_,Reason} ->
+        {'DOWN', Mref, _, _, Reason} ->
             %% receiver code failed
             exit(Reason)
     end.
@@ -107,30 +107,30 @@ doc_ids_receiver(Caller, Tag, IndexId, Term) ->
               process_flag(trap_exit, true),
               Mref = monitor(process, Caller),
               receive
-                  {'DOWN',Mref,_,_,_} ->
+                  {'DOWN', Mref, _, _, _} ->
                       %% caller died before sending us the go-ahead
                       exit(normal);
-                  {Caller,Tag} ->
+                  {Caller, Tag} ->
                       DataId = doko_routing:invix_data_id(IndexId, Term),
                       Nodes = doko_routing:wherefrom(DataId),
                       Keys = lists:map(
                                fun (Node) ->
                                        rpc:async_call(Node,
                                                       doko_node, doc_ids,
-                                                      [IndexId,Term])
+                                                      [IndexId, Term])
                                end,
                                Nodes),
                       Result = yield(Keys, 1, length(Keys)),
-                      exit({self(),Tag,Result})
+                      exit({self(), Tag, Result})
               end
       end).
 
 yield(Keys, Index, Length) ->
     Key = lists:nth(Index, Keys),
     case rpc:nb_yield(Key) of
-        {value,{badrpc,nodedown}} ->
+        {value, {badrpc, nodedown}} ->
             yield(lists:delete(Key, Keys), 1, Length - 1);
-        {value,Value} ->
+        {value, Value} ->
             Value;
         timeout ->
             case Index of

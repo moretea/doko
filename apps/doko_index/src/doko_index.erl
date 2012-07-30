@@ -1,7 +1,7 @@
 -module(doko_index).
 
 %% API
--export([add_index/1,del_index/1]).
+-export([add_index/1, del_index/1]).
 -export([add_doc_id/4, del_doc_id/4, doc_ids/2]).
 
 %%----------------------------------------------------------------------------
