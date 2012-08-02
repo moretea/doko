@@ -10,5 +10,6 @@
              ]}.
 {excl_mods,[
             doko_index_app,
-            doko_query_parser
+            doko_query_parser,
+            doko_router_app
            ]}.
