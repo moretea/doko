@@ -6,5 +6,5 @@
   {registered, []},
   {applications, [kernel, stdlib]},
   {mod, {doko_cluster_app, []}},
-  {included_applications, []},
+  {included_applications, [doko_router]},
   {env, []}]}.
