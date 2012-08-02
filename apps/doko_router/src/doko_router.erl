@@ -1,4 +1,4 @@
--module(doko_routing).
+-module(doko_router).
 
 -behaviour(gen_server).
 

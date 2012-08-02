@@ -1,5 +1,5 @@
 %% @private
--module(doko_routing_app).
+-module(doko_router_app).
 
 -behaviour(application).
 
@@ -11,7 +11,7 @@
 %%----------------------------------------------------------------------------
 
 start(_StartType, _StartArgs) ->
-    doko_routing_sup:start_link().
+    doko_router_sup:start_link().
 
 stop(_State) ->
     ok.

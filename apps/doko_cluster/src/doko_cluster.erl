@@ -80,8 +80,8 @@ foreach_term(Fun, IndexId, DocId, Tuples) ->
               %% TODO: choose appropriate timeout
               Timeout = infinity,
               %% TODO: handle errors
-              Nodes = doko_routing:to(
-                        doko_routing:invix_data_id(IndexId, Term)),
+              Nodes = doko_router:to(
+                        doko_router:invix_data_id(IndexId, Term)),
               {_, _} = rpc:multicall(Nodes,
                                      doko_node, Fun,
                                      [IndexId, Term, DocId, ZoneIds],
@@ -113,8 +113,8 @@ doc_ids_receiver(Caller, Tag, IndexId, Term) ->
                       %% caller died before sending us the go-ahead
                       exit(normal);
                   {Caller, Tag} ->
-                      DataId = doko_routing:invix_data_id(IndexId, Term),
-                      Nodes = doko_routing:from(DataId),
+                      DataId = doko_router:invix_data_id(IndexId, Term),
+                      Nodes = doko_router:from(DataId),
                       Keys = lists:map(
                                fun (Node) ->
                                        rpc:async_call(Node,

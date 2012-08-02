@@ -1,5 +1,5 @@
 %% @private
--module(doko_routing_sup).
+-module(doko_router_sup).
 
 -behaviour(supervisor).
 
@@ -24,7 +24,7 @@ start_link() ->
 %%----------------------------------------------------------------------------
 
 init([]) ->
-    {ok, {{one_for_one, 5, 10}, [?CHILD(doko_routing, worker)]}}.
+    {ok, {{one_for_one, 5, 10}, [?CHILD(doko_router, worker)]}}.
 
 %% Local variables:
 %% mode: erlang
