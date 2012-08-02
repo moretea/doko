@@ -4,4 +4,5 @@
  [{description, "Routing Library"},
   {vsn, "0.1"},
   {applications, [kernel, stdlib]},
+  {mod, {doko_routing_app, []}},
   {env, []}]}.
