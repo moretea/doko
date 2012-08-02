@@ -20,7 +20,9 @@ add_index(IndexId, Lang) ->
     %% TODO: choose appropriate timeout
     Timeout = infinity,
     %% TODO: handle errors
-    rpc:multicall(Nodes, doko_node, add_index, [IndexId, Lang], Timeout),
+    {_, []} = rpc:multicall(Nodes,
+                            doko_node, add_index, [IndexId, Lang],
+                            Timeout),
     ok.
 
 %% @doc Deletes an index.
@@ -30,7 +32,7 @@ del_index(IndexId) ->
     %% TODO: choose appropriate timeout
     Timeout = infinity,
     %% TODO: handle errors
-    rpc:multicall(Nodes, doko_node, del_index, [IndexId], Timeout),
+    {_, []} = rpc:multicall(Nodes, doko_node, del_index, [IndexId], Timeout),
     ok.
 
 %% @doc Returns the language of an index.
