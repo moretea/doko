@@ -1,5 +1,5 @@
 %% @private
--module(doko_cluster_sup).
+-module(doko_router_sup).
 
 -behaviour(supervisor).
 
@@ -17,14 +17,14 @@
 %%----------------------------------------------------------------------------
 
 start_link() ->
-    supervisor:start_link({local, ?MODULE}, ?MODULE, []).
+    supervisor:start_link({local,?MODULE}, ?MODULE, []).
 
 %%----------------------------------------------------------------------------
 %% supervisor callbacks
 %%----------------------------------------------------------------------------
 
 init([]) ->
-    {ok, {{one_for_one, 5, 10}, [?CHILD(doko_router_sup, supervisor)]}}.
+    {ok, {{one_for_one, 5, 10}, [?CHILD(doko_router, worker)]}}.
 
 %% Local variables:
 %% mode: erlang
