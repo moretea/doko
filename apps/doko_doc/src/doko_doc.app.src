@@ -1,0 +1,7 @@
+%% -*- mode: erlang; fill-column: 78; -*-
+
+{application,doko_doc,
+ [{description,"Doko Document Data Type Library"},
+  {vsn,"0.1"},
+  {applications,[kernel,stdlib]},
+  {env,[]}]}.

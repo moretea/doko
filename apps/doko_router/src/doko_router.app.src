@@ -1,0 +1,8 @@
+%% -*- mode: erlang; fill-column: 78; -*-
+
+{application, doko_router,
+ [{description, "Doko Router"},
+  {vsn, "0.1"},
+  {applications, [kernel, stdlib]},
+  {mod, {doko_router_app, []}},
+  {env, []}]}.
