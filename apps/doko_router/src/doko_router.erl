@@ -1,8 +1,10 @@
 -module(doko_router).
+-compile({no_auto_import, [nodes/0]}).
 
 -behaviour(gen_server).
 
 %% API
+-export([nodes/0, set_nodes/1]).
 -export([to/1, from/1]).
 -export([invix_data_id/2]).
 -export_type([data_id/0]).
@@ -29,6 +31,16 @@
 %%----------------------------------------------------------------------------
 %% API
 %%----------------------------------------------------------------------------
+
+-spec nodes() -> [node(), ...].
+nodes() ->
+    {ok, Nodes} = application:get_env(doko_router, nodes),
+    Nodes.
+
+set_nodes(Nodes) ->
+    %% TODO: check if number of nodes is at least equal to number of
+    %% duplicates
+    application:set_env(doko_router, nodes, Nodes).
 
 -spec to(data_id()) -> [node(), ...].
 to(DataId) ->
@@ -79,7 +91,7 @@ code_change(_OldVsn, State, _Extra) ->
 %%----------------------------------------------------------------------------
 
 where(DataId) ->
-    {ok,Nodes} = application:get_env(doko_cluster, nodes),
+    Nodes = nodes(),
     Vnode = erlang:phash2(DataId, ?RING_SIZE),
     Start = 1 + erlang:trunc((Vnode / ?RING_SIZE) * length(Nodes)),
     lists:sublist(Nodes ++ Nodes, Start, ?N_DUPS).

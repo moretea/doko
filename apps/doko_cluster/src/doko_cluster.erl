@@ -16,11 +16,10 @@
 %% @doc Adds an index.
 -spec add_index(index_id(), doko_utf8:iso_639_1()) -> ok.
 add_index(IndexId, Lang) ->
-    {ok, Nodes} = application:get_env(doko_cluster, nodes),
     %% TODO: choose appropriate timeout
     Timeout = infinity,
     %% TODO: handle errors
-    {_, []} = rpc:multicall(Nodes,
+    {_, []} = rpc:multicall(doko_router:nodes(),
                             doko_node, add_index, [IndexId, Lang],
                             Timeout),
     ok.
@@ -28,11 +27,12 @@ add_index(IndexId, Lang) ->
 %% @doc Deletes an index.
 -spec del_index(index_id()) -> ok.
 del_index(IndexId) ->
-    {ok, Nodes} = application:get_env(doko_cluster, nodes),
     %% TODO: choose appropriate timeout
     Timeout = infinity,
     %% TODO: handle errors
-    {_, []} = rpc:multicall(Nodes, doko_node, del_index, [IndexId], Timeout),
+    {_, []} = rpc:multicall(doko_router:nodes(),
+                            doko_node, del_index, [IndexId],
+                            Timeout),
     ok.
 
 %% @doc Returns the language of an index.
@@ -60,10 +60,8 @@ doc_ids(IndexId, Term) ->
 %% @doc Starts the application.
 -spec start([node(), ...]) -> ok.
 start(Nodes) ->
-    %% TODO: check if number of nodes is at least equal to number of
-    %% duplicates
-    application:set_env(doko_cluster, nodes, Nodes),
-    application:start(doko_cluster).
+    application:start(doko_cluster),
+    doko_router:set_nodes(Nodes).
 
 %% @doc Stops the application.
 -spec stop() -> ok.
