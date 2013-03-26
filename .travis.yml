@@ -1,6 +1,7 @@
 language: erlang
 script: make test
 otp_release:
+  - R16B
   - R15B01
 # Older versions disabled for now. System test fails (all test are
 # skipped, doesn't happen when run interactively), needs further
