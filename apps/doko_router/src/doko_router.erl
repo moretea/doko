@@ -8,6 +8,7 @@
 -export([to/1, from/1]).
 -export([invix_data_id/2]).
 -export_type([data_id/0]).
+-export_type([invix_data_id/0]).
 -export([start_link/0]).
 
 %% gen_server callbacks
